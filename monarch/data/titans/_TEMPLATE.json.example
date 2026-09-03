@@ -1,0 +1,21 @@
+{
+  "id": "thingthus",
+  "name": "Thingthus",
+  "emj": "🦖",
+  "cat": "custom",
+  "rar": "ELITE",
+  "threat": 3,
+  "origin": "پرونده‌ی تازه — افزوده‌شده با اورلی",
+  "h": "31 م",
+  "w": "18,000 تن",
+  "hp": 780, "atk": 96, "df": 62, "spd": 48, "eng": 55,
+  "int": 52, "reg": 6, "res": 58, "acc": 74, "dodge": 22,
+  "tags": ["brute", "burrow"],
+  "weak": ["ice", "sonic"],
+  "resist": ["fire", "acid"],
+  "env": "ocean:1.18|volcano:1.10|city:0.92",
+  "pas": "deep_endurance",
+  "ab": ["subterranean_ambush", "tidal_drag", "chitin_rake"],
+  "ult": "trench_collapse",
+  "lore": "پرونده‌ی تازه — در حال راستی‌آزمایی MONARCH."
+}

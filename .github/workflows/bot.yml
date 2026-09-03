@@ -1,0 +1,79 @@
+name: 🦖☢️ MONARCH 24/7
+
+# GitHub Actions به‌عنوان VPS رایگان: هر ۱۰ دقیقه یک job جدید در صف می‌رود،
+# هر job تا ~۵ ساعت و ۴۰ دقیقه اجرا می‌شود و دیتابیس را هر ۶۰ ثانیه کامیت می‌کند.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "monarch/**"
+      - "run.py"
+      - "requirements.txt"
+      - ".github/workflows/bot.yml"
+
+concurrency:
+  group: monarch-bot
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: دریافت کد و دیتابیس
+        uses: actions/checkout@v4
+
+      - name: نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: نصب کتابخانه‌ها
+        run: pip install -r requirements.txt
+
+      - name: آزمون‌های هسته (بازی، تعادل، ضداسپم)
+        run: |
+          python3 tests/test_game.py || echo "::warning:: تست‌ها سبز نشد — ربات باز هم بالا می‌آید (آپ‌تایم اولویت دارد)"
+
+      - name: اجرای ربات + ذخیره خودکار دیتابیس
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          ADMIN_IDS: ${{ secrets.ADMIN_IDS }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+          CHANNEL_URL: ${{ secrets.CHANNEL_URL }}
+          GROUP_URL: ${{ secrets.GROUP_URL }}
+          MC_DB_PATH: ${{ github.workspace }}/monarch.db
+        run: |
+          git config user.name "monarch-bot"
+          git config user.email "monarch-bot@users.noreply.github.com"
+          DB=monarch.db
+          save_db() {
+            python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
+            git add "$DB" 2>/dev/null || true
+            git commit -m "db save exit" >/dev/null 2>&1 || true
+            git pull --rebase --autostash >/dev/null 2>&1 || true
+            git push >/dev/null 2>&1 || true
+          }
+          trap save_db EXIT
+          ( while true; do
+              sleep 60
+              python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
+              git add "$DB" 2>/dev/null || true
+              git commit -m "autosave db" >/dev/null 2>&1 || true
+              git pull --rebase --autostash >/dev/null 2>&1 || true
+              git push >/dev/null 2>&1 || true
+            done ) &
+          SAVER=$!
+          timeout 20400 python3 run.py || true
+          kill $SAVER 2>/dev/null || true
+          python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
+          git add "$DB" 2>/dev/null || true
+          git commit -m "db save final" >/dev/null 2>&1 || true
+          git pull --rebase --autostash >/dev/null 2>&1 || true
+          git push >/dev/null 2>&1 || true

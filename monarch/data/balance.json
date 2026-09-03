@@ -1,0 +1,342 @@
+{
+ "sig": "6aa29428de90",
+ "encounter": 1.0,
+ "cal": {
+  "godzilla": {
+   "hp_k": 0.48,
+   "atk_k": 0.442,
+   "smart": 0.63,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "kong": {
+   "hp_k": 0.572,
+   "atk_k": 0.526,
+   "smart": 0.65,
+   "spam": 0.02,
+   "ttk": 14.8,
+   "pace": 1.134
+  },
+  "mothra": {
+   "hp_k": 0.554,
+   "atk_k": 0.509,
+   "smart": 0.48,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "king_ghidorah": {
+   "hp_k": 0.499,
+   "atk_k": 0.459,
+   "smart": 0.56,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "rodan": {
+   "hp_k": 0.608,
+   "atk_k": 0.56,
+   "smart": 0.69,
+   "spam": 0.04,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "mechagodzilla": {
+   "hp_k": 0.517,
+   "atk_k": 0.476,
+   "smart": 0.54,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "anguirus": {
+   "hp_k": 0.7,
+   "atk_k": 0.644,
+   "smart": 0.75,
+   "spam": 0.04,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "destoroyah": {
+   "hp_k": 0.517,
+   "atk_k": 0.476,
+   "smart": 0.6,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "spacegodzilla": {
+   "hp_k": 0.517,
+   "atk_k": 0.476,
+   "smart": 0.48,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "biollante": {
+   "hp_k": 0.608,
+   "atk_k": 0.56,
+   "smart": 0.67,
+   "spam": 0.02,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "gigan": {
+   "hp_k": 0.608,
+   "atk_k": 0.56,
+   "smart": 0.65,
+   "spam": 0.0,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "hedorah": {
+   "hp_k": 0.608,
+   "atk_k": 0.56,
+   "smart": 0.65,
+   "spam": 0.06,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "megalon": {
+   "hp_k": 0.755,
+   "atk_k": 0.694,
+   "smart": 0.87,
+   "spam": 0.27,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "king_caesar": {
+   "hp_k": 0.682,
+   "atk_k": 0.627,
+   "smart": 0.77,
+   "spam": 0.0,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "titanosaurus": {
+   "hp_k": 0.682,
+   "atk_k": 0.627,
+   "smart": 0.79,
+   "spam": 0.0,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "battra": {
+   "hp_k": 0.623,
+   "atk_k": 0.568,
+   "smart": 0.54,
+   "spam": 0.0,
+   "ttk": 14.8,
+   "pace": 1.134
+  },
+  "jet_jaguar": {
+   "hp_k": 0.718,
+   "atk_k": 0.661,
+   "smart": 0.73,
+   "spam": 0.0,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "moguera": {
+   "hp_k": 0.645,
+   "atk_k": 0.593,
+   "smart": 0.79,
+   "spam": 0.12,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "baragon": {
+   "hp_k": 0.718,
+   "atk_k": 0.661,
+   "smart": 0.88,
+   "spam": 0.27,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "kumonga": {
+   "hp_k": 0.718,
+   "atk_k": 0.661,
+   "smart": 0.87,
+   "spam": 0.27,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "kamacuras": {
+   "hp_k": 0.755,
+   "atk_k": 0.694,
+   "smart": 0.87,
+   "spam": 0.29,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "ebirah": {
+   "hp_k": 0.682,
+   "atk_k": 0.627,
+   "smart": 0.77,
+   "spam": 0.1,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "manda": {
+   "hp_k": 0.645,
+   "atk_k": 0.593,
+   "smart": 0.79,
+   "spam": 0.04,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "gorosaurus": {
+   "hp_k": 0.718,
+   "atk_k": 0.661,
+   "smart": 0.88,
+   "spam": 0.21,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "varan": {
+   "hp_k": 0.864,
+   "atk_k": 0.795,
+   "smart": 0.85,
+   "spam": 0.04,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "orga": {
+   "hp_k": 0.627,
+   "atk_k": 0.577,
+   "smart": 0.6,
+   "spam": 0.0,
+   "ttk": 14.8,
+   "pace": 1.134
+  },
+  "megaguirus": {
+   "hp_k": 0.59,
+   "atk_k": 0.543,
+   "smart": 0.67,
+   "spam": 0.02,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "monster_x": {
+   "hp_k": 0.572,
+   "atk_k": 0.526,
+   "smart": 0.52,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "keizer_ghidorah": {
+   "hp_k": 0.499,
+   "atk_k": 0.459,
+   "smart": 0.52,
+   "spam": 0.0,
+   "ttk": 20.0,
+   "pace": 1.1
+  },
+  "skar_king": {
+   "hp_k": 0.517,
+   "atk_k": 0.476,
+   "smart": 0.52,
+   "spam": 0.0,
+   "ttk": 20.0,
+   "pace": 1.1
+  },
+  "shimo": {
+   "hp_k": 0.517,
+   "atk_k": 0.476,
+   "smart": 0.6,
+   "spam": 0.0,
+   "ttk": 17.4,
+   "pace": 1.112
+  },
+  "suko": {
+   "hp_k": 0.755,
+   "atk_k": 0.694,
+   "smart": 0.88,
+   "spam": 0.17,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "tiamat": {
+   "hp_k": 0.682,
+   "atk_k": 0.627,
+   "smart": 0.67,
+   "spam": 0.0,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "scylla": {
+   "hp_k": 0.572,
+   "atk_k": 0.526,
+   "smart": 0.71,
+   "spam": 0.06,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "behemoth": {
+   "hp_k": 0.645,
+   "atk_k": 0.593,
+   "smart": 0.69,
+   "spam": 0.02,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "methuselah": {
+   "hp_k": 0.627,
+   "atk_k": 0.577,
+   "smart": 0.62,
+   "spam": 0.0,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "amhuluk": {
+   "hp_k": 0.7,
+   "atk_k": 0.644,
+   "smart": 0.81,
+   "spam": 0.0,
+   "ttk": 9.6,
+   "pace": 1.178
+  },
+  "abaddon": {
+   "hp_k": 0.608,
+   "atk_k": 0.56,
+   "smart": 0.71,
+   "spam": 0.02,
+   "ttk": 12.2,
+   "pace": 1.156
+  },
+  "muto_prime": {
+   "hp_k": 0.59,
+   "atk_k": 0.543,
+   "smart": 0.58,
+   "spam": 0.0,
+   "ttk": 14.8,
+   "pace": 1.134
+  },
+  "skullcrawler": {
+   "hp_k": 0.736,
+   "atk_k": 0.677,
+   "smart": 0.83,
+   "spam": 0.17,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "warbat": {
+   "hp_k": 0.682,
+   "atk_k": 0.627,
+   "smart": 0.85,
+   "spam": 0.35,
+   "ttk": 7.0,
+   "pace": 1.2
+  },
+  "muto_minion": {
+   "hp_k": 0.722,
+   "atk_k": 0.593,
+   "smart": 0.87,
+   "spam": 0.46,
+   "ttk": 7.0,
+   "pace": 1.2
+  }
+ }
+}

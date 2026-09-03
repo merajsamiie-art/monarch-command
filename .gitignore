@@ -1,0 +1,14 @@
+# 🦖☢️ MONARCH COMMAND
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.log
+.scratch/
+.pytest_cache/
+# دیتابیسِ محلی (در سرورِ Actions کامیت می‌شود، نه اینجا)
+monarch.db
+monarch.db-shm
+monarch.db-wal
+*.bak
