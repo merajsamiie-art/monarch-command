@@ -8,11 +8,11 @@ from db import now
 FACILITIES = {
     "radar": dict(name="📡 Radar Array", desc="+۱۲٪ بازدهی هر سطح روی ردیابی سیگنال",
                   effect="track"),
-    "lab": dict(name="🔬 Laboratory", desc="تحلیل سریع‌تر و شکست کمتر (هر سطح −۳٪ ریسک)",
+    "lab": dict(name="🔬 آزمایشگاه", desc="تحلیل سریع‌تر و شکست کمتر (هر سطح −۳٪ ریسک)",
                 effect="research"),
-    "storage": dict(name="📦 Secure Storage", desc="ظرفیت خزنه و محافظت در برابر Drop"),
-    "defense": dict(name="🛡 Defense Grid", desc="+۵٪ دفاع بازیکنان در نبرد از باس/راید"),
-    "engineering": dict(name="⚙️ Engineering", desc="کاهش زمان کاوش و هزینه‌ی ارتقا"),
+    "storage": dict(name="📦 خزانهٔ امن", desc="ظرفیت خزنه و محافظت در برابر Drop"),
+    "defense": dict(name="🛡 شبکهٔ پدافند", desc="+۵٪ دفاع بازیکنان در نبرد از باس/راید"),
+    "engineering": dict(name="⚙️ مهندسی", desc="کاهش زمان کاوش و هزینه‌ی ارتقا"),
 }
 
 ROLES = ("founder", "commander", "analyst", "agent")
@@ -24,14 +24,14 @@ def create(uid: int, name: str, tag: str) -> dict:
     if not p:
         return dict(ok=False, msg="🔒 /start")
     if member_of(uid):
-        return dict(ok=False, msg="🏢 تو عضو یک Division هستی — اول «/div leave».")
+        return dict(ok=False, msg="🏢 تو عضو یک سازمان هستی — اول «/div leave».")
     name = (name or "").strip()[:22]
     tag = (tag or "").strip().upper()[:4]
     if len(name) < 3 or len(tag) < 2:
         return dict(ok=False, msg="🏷 نام حداقل ۳ حرف و برچسب ۲ تا ۴ حرف لازم دارد.")
     cost = config.DIV_CREATE_COST
     if float(p.get("credits") or 0) < cost:
-        return dict(ok=False, msg=f"🪙 تأسیس Division {cost:,} MC است — الان {float(p['credits']):,.0f}.")
+        return dict(ok=False, msg=f"🪙 تأسیس سازمان {cost:,} اعتبار است — الان {float(p['credits']):,.0f}.")
     d = db.db()
     if d.one("SELECT id FROM divisions WHERE name=? OR tag=?", (name, tag)):
         return dict(ok=False, msg="⚠️ این نام یا برچسب ثبت شده است.")
@@ -42,8 +42,8 @@ def create(uid: int, name: str, tag: str) -> dict:
     d.ex("INSERT INTO div_users(user_id,div_id,role,joined) VALUES(?,?,?,?)", (int(uid), did, "founder", now()))
     db.db().feed("division", f"+{did}:{name}")
     return dict(ok=True, did=int(did), id=int(did), tag=tag, name=name,
-                msg=(f"🏢 <b>DIVISION ACTIVATED</b>\n{p['name']} → <b>{name}</b> "
-                              f"<code>[{tag}]</code>\n🪙 ۲۰۰۰ MC خزانه‌ی اولیه · «/div» برای مدیریت"))
+                msg=(f"🏢 <b>سازمان فعال شد</b>\n{p['name']} → <b>{name}</b> "
+                              f"<code>[{tag}]</code>\n🪙 ۲۰۰۰ اعتبار خزانه‌ی اولیه · «/div» برای مدیریت"))
 
 
 def member_of(uid: int) -> dict:
@@ -92,7 +92,7 @@ def fac_cost(level: int) -> dict:
 def fac_up(uid: int, key: str) -> dict:
     m = member_of(uid)
     if not m:
-        return dict(ok=False, msg="🏢 تو Division نداری.")
+        return dict(ok=False, msg="🏢 تو سازمان نداری.")
     if m["role"] not in ("founder", "commander"):
         return dict(ok=False, msg="🔒 فقط فرمانده می‌تواند ساخت‌وساز کند.")
     if key not in FACILITIES:
@@ -102,10 +102,10 @@ def fac_up(uid: int, key: str) -> dict:
     fac = json.loads(d.get("facilities") or "{}")
     lvl = int(fac.get(key, 0))
     if lvl >= config.DIV_FAC_MAX:
-        return dict(ok=False, msg="⚙️ سقف مهندسی MONARCH reached.")
+        return dict(ok=False, msg="⚙️ سقف مهندسی مانارچ reached.")
     c = fac_cost(lvl)
     if float(d.get("credits") or 0) < c["credits"]:
-        return dict(ok=False, msg=(f"🏦 خزانه کم است: {c['credits']:,} MC لازم · موجود {float(d['credits']):,.0f}. "
+        return dict(ok=False, msg=(f"🏦 خزانه کم است: {c['credits']:,} اعتبار لازم · موجود {float(d['credits']):,.0f}. "
                                    f"«/div deposit»"))
     div_spend(m["div_id"], **{k: -v for k, v in c.items() if k != "credits"})
     fac[key] = lvl + 1
@@ -130,7 +130,7 @@ def div_spend(did: int, **deltas):
 
 
 def credit_activity(uid: int, kind: str, amount: float = 1):
-    """فعالیت اعضا → سهم Division + XP سازمان."""
+    """فعالیت اعضا → سهم سازمان + XP سازمان."""
     m = member_of(uid)
     if not m:
         return
@@ -151,15 +151,15 @@ def credit_activity(uid: int, kind: str, amount: float = 1):
 def deposit(uid: int, amount: float) -> dict:
     m = member_of(uid)
     if not m:
-        return dict(ok=False, msg="🏢 Division نداری.")
+        return dict(ok=False, msg="🏢 سازمان نداری.")
     import player as PL
     p = PL.get(uid)
     amt = max(0.0, min(float(amount or 0), float(p.get("credits") or 0)))
     if amt < 50:
-        return dict(ok=False, msg="🪙 حداقل واریز ۵۰ MC.")
+        return dict(ok=False, msg="🪙 حداقل واریز ۵۰ اعتبار.")
     PL.spend(uid, credits=-amt)
     div_spend(m["div_id"], credits=amt)
-    return dict(ok=True, msg=f"🏦 <b>+{amt:,.0f} MC</b> به خزانه‌ی Division واریز شد.")
+    return dict(ok=True, msg=f"🏦 <b>+{amt:,.0f} اعتبار</b> به خزانه‌ی سازمان واریز شد.")
 
 
 def withdraw(uid: int, amount: float) -> dict:
@@ -173,7 +173,7 @@ def withdraw(uid: int, amount: float) -> dict:
         return dict(ok=False, msg="🏦 خزانه خالی است.")
     div_spend(m["div_id"], credits=-amt)
     PL.add_res(uid, credits=amt)
-    return dict(ok=True, msg=f"🏦 <b>−{amt:,.0f} MC</b> از خزانه (ثبت شد).")
+    return dict(ok=True, msg=f"🏦 <b>−{amt:,.0f} اعتبار</b> از خزانه (ثبت شد).")
 
 
 def invite_code(did: int) -> str:
@@ -183,27 +183,27 @@ def invite_code(did: int) -> str:
 def join(uid: int, code: str) -> dict:
     m = member_of(uid)
     if m:
-        return dict(ok=False, msg="🏢 تو در یک Division دیگر هستی.")
+        return dict(ok=False, msg="🏢 تو در یک سازمان دیگر هستی.")
     try:
         did = int(str(code).replace("DIV-", "").strip())
     except Exception:
         return dict(ok=False, msg="🔑 کد نامعتبر — شکل: DIV-0007")
     d = div_of(did)
     if not d:
-        return dict(ok=False, msg="🔑 چنین Division‌ای وجود ندارد.")
+        return dict(ok=False, msg="🔑 چنین سازمان‌ای وجود ندارد.")
     if len(members(did)) >= config.DIV_MAX_MEMBERS:
         return dict(ok=False, msg="🏢 ظرفیت تکمیل است.")
     db.db().ex("INSERT OR REPLACE INTO div_users(user_id,div_id,role,joined) VALUES(?,?,?,?)",
                (int(uid), did, "agent", now()))
     import player as PL
-    return dict(ok=True, msg=f"🏢 <b>ASSIGNED</b> — {d['name']} <code>[{d['tag']}]</code>\n"
+    return dict(ok=True, msg=f"🏢 <b>تخصیص یافت</b> — {d['name']} <code>[{d['tag']}]</code>\n"
                              f"خوش‌آمد {PL.name_of(uid)}. رادار روشن است.")
 
 
 def leave(uid: int) -> dict:
     m = member_of(uid)
     if not m:
-        return dict(ok=False, msg="🏢 Division نداری.")
+        return dict(ok=False, msg="🏢 سازمان نداری.")
     d = div_of(m["div_id"])
     if int(d.get("owner_id") or 0) == int(uid):
         return dict(ok=False, msg="🔒 موسس نمی‌تواند خارج شود — «/div disband».")
@@ -217,7 +217,7 @@ def disband(uid: int) -> dict:
         return dict(ok=False, msg="🔒 فقط موسس.")
     db.db().ex("DELETE FROM div_users WHERE div_id=?", (m["div_id"],))
     db.db().ex("DELETE FROM divisions WHERE id=?", (m["div_id"],))
-    return dict(ok=True, msg="🗑 <b>DIVISION DEACTIVATED</b> — پرونده بایگانی شد.")
+    return dict(ok=True, msg="🗑 <b>سازمان منحل شد</b> — پرونده بایگانی شد.")
 
 
 def promote(uid: int, target: int) -> dict:
@@ -226,7 +226,7 @@ def promote(uid: int, target: int) -> dict:
         return dict(ok=False, msg="🔒 فقط موسس ارتقا می‌دهد.")
     t = member_of(target)
     if not t or t["div_id"] != m["div_id"]:
-        return dict(ok=False, msg="👤 آن فرد در Division تو نیست.")
+        return dict(ok=False, msg="👤 آن فرد در سازمان تو نیست.")
     role = "commander" if t["role"] != "commander" else "analyst"
     db.db().ex("UPDATE div_users SET role=? WHERE user_id=?", (role, int(target)))
     return dict(ok=True, msg=f"🎖 نقش تازه: <b>{role}</b>")
@@ -240,7 +240,7 @@ def card(uid: int) -> str:
     import ui
     d = get_for(uid)
     if not d:
-        return ("🏢 <b>DIVISION REGISTRY</b>\n\n<i>شما به هیچ Division متصل نیستید.</i>\n"
+        return ("🏢 <b>دفتر سازمان‌ها</b>\n\n<i>شما به هیچ سازمان متصل نیستید.</i>\n"
                 "«/div create <name> <tag>» · «/div join DIV-0001»")
     import json
     fac = json.loads(d.get("facilities") or "{}")
@@ -249,11 +249,11 @@ def card(uid: int) -> str:
              f"🔩{float(d.get('mats') or 0):g} · 🔋{float(d.get('cells') or 0):g}",
              f"✨ XP سازمان {float(d.get('xp') or 0):,.0f}/{400 * int(d['level']) * (1 + 0.35 * int(d['level'])):,.0f}",
              f"🏆 رکورد: {int(d.get('wins') or 0)}W / {int(d.get('loses') or 0)}L · Morale {float(d.get('morale') or 50):.0f}",
-             f"🔑 کد عضویت: <code>{invite_code(d['id'])}</code>", "", "⚙️ <b>FACILITIES</b>"]
+             f"🔑 کد عضویت: <code>{invite_code(d['id'])}</code>", "", "⚙️ <b>تسهیلات</b>"]
     for k, meta in FACILITIES.items():
         lvl = int(fac.get(k, 0))
         cost = fac_cost(lvl)
-        lines.append(f"{meta['name']} {ui.bar(lvl, config.DIV_FAC_MAX, 6)} <code>L{lvl}</code> "
+        lines.append(f"{meta['name']} {ui.bar(lvl, config.DIV_FAC_MAX, 6)} <code>سطح {lvl}</code> "
                      f"<i>({cost['credits']:,} MC)</i>")
     lines += ["", f"👥 <b>AGENTS ({len(d['members'])}/{config.DIV_MAX_MEMBERS})</b>"]
     for mrow in d["members"][:10]:
@@ -301,13 +301,13 @@ def deploy(uid: int, alloc: dict) -> dict:
         return dict(ok=False, msg="⚔️ جنگی فعال نیست.")
     mine = m["div_id"]
     if not any(mine in (p.get("a"), p.get("b")) for p in w.get("pairs", [])):
-        return dict(ok=False, msg="⚔️ Division شما در این جنگ ثبت نشده.")
+        return dict(ok=False, msg="⚔️ سازمان شما در این جنگ ثبت نشده.")
     total = sum(float(alloc.get(k, 0)) for k in LANES)
     if abs(total - 100) > 1:
         return dict(ok=False, msg=f"⚖️ مجموع تخصیص باید ۱۰۰ باشد (الان {total:g}).")
     w["deploys"][str(mine)] = {k: float(alloc.get(k, 0)) for k in LANES}
     db.db().setv("war_state", w)
-    return dict(ok=True, msg="⚔️ <b>DEPLOYMENT SEALED</b>\n"
+    return dict(ok=True, msg="⚔️ <b>تخصیص نهایی شد</b>\n"
                              + " · ".join(f"{LANE_NAME[k]} {w['deploys'][str(mine)][k]:g}%" for k in LANES))
 
 

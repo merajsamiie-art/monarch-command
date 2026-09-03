@@ -3,19 +3,20 @@ import random
 
 import balance
 import bosses
+import ui
 import config
 import db
 import titans as TN
 from db import now
 
 ACTIONS = {
-    "strike": dict(name="Strike", emj="sword", cost=6.0, key="dmg", desc="ضربه‌ی هماهنگ به بدنه‌ی باس"),
-    "focus": dict(name="Focused Strike", emj="heavy", cost=14.0, key="dmg", desc="×۲ آسیب، ریسک آسیب خودت"),
-    "shield": dict(name="Shield Line", emj="guard", cost=8.0, key="guard", desc="سپر متحدان؛ امتیاز Best Defense"),
-    "repair": dict(name="Field Repair", emj="medkit", cost=10.0, key="support", desc="ترمیم گروهی؛ Best Support"),
-    "analyze": dict(name="Deep Analyze", emj="research", cost=6.0, key="analyze",
-                    desc="جمع داده؛ پیشرفت تحقیق + جایزه‌ی Best Research"),
-    "regroup": dict(name="Regroup", emj="charge", cost=0.0, key="charge", desc="بازآرایی: شارژ و انرژی"),
+    "strike": dict(name="ضربه", emj="sword", cost=6.0, key="dmg", desc="ضربه‌ی هماهنگ به بدنه‌ی باس"),
+    "focus": dict(name="ضربهٔ متمرکز", emj="heavy", cost=14.0, key="dmg", desc="×۲ آسیب، ریسک آسیب خودت"),
+    "shield": dict(name="خطِ سپر", emj="guard", cost=8.0, key="guard", desc="سپر متحدان؛ امتیاز بهترین دفاع"),
+    "repair": dict(name="تعمیر میدانی", emj="medkit", cost=10.0, key="support", desc="ترمیم گروهی؛ بهترین پشتیبانی"),
+    "analyze": dict(name="تحلیل ژرفا", emj="research", cost=6.0, key="analyze",
+                    desc="جمع داده؛ پیشرفتِ پژوهش + جایزۀ بهترین پژوهش"),
+    "regroup": dict(name="بازگروه‌بندی", emj="charge", cost=0.0, key="charge", desc="بازآرایی: شارژ و انرژی"),
 }
 
 
@@ -32,6 +33,8 @@ def start(boss_id: str = None, hours: float = None) -> dict:
     """آغاز رید جهانی (از موتور رویداد یا دستور ادمین)."""
     bid = boss_id or random.choice([k for k, v in bosses.BOSSES.items() if v.get("world")])
     b = bosses.by_id(bid)
+    if not b:
+        return dict(ok=False, msg=f"❔ باسِ جهانی «{bid}» در دیتابیس نیست — /boss list")
     chat = dict(zone=(b.get("zones") or ["city"])[0], danger=5, min_rank=6)
     blk = bosses.block_for(bid, chat)
     players = db.db().one("SELECT COUNT(*) c FROM players")
@@ -52,15 +55,15 @@ def start(boss_id: str = None, hours: float = None) -> dict:
 
 def _announce(bid: str, st: dict) -> str:
     b = bosses.by_id(bid)
-    return (f"🚨 <b>MONARCH GLOBAL ALERT</b>\n\n"
+    return (f"🚨 <b>هشدار سراسری مانارچ</b>\n\n"
             f"🌍 <b>WORLD EVENT — {b['name']}</b>\n"
             f"🕳 {TN.ENVS.get((b.get('zones') or ['city'])[0], 'شهر')} · "
-            f"☢️ THREAT: <b>EXTINCTION</b>\n"
+            f"☢️ THREAT: <b>انقراض</b>\n"
             f"🧱 HP POOL: <code>{st['max_hp']:,.0f}</code>\n"
             f"⏱ پنجره: <b>{config.RAID_DURATION/3600:.0f} ساعت</b>\n\n"
             f"<i>{b.get('lore','')}</i>\n\n"
             f"▸ <code>/raid join</code> سپس <code>/raid</code> — ضربه بزن.\n"
-            f"🥇 Most Damage · 🛡 Best Defense · ❤️ Best Support · 🎯 Last Hit · 🔬 Best Research")
+            f"🥇 بیشترین آسیب · 🛡 بهترین دفاع · ❤️ بهترین پشتیبانی · 🎯 ضربه آخر · 🔬 بهترین پژوهش")
 
 
 def join(uid: int) -> dict:
@@ -72,7 +75,7 @@ def join(uid: int) -> dict:
     if not p:
         return dict(ok=False, msg="🔒 /start")
     if PL.is_dead(p):
-        return dict(ok=False, msg="☠️ در Recovery Mode نمی‌توانی وارد شیوع شوی.")
+        return dict(ok=False, msg="☠️ در حالت بازیابی نمی‌توانی وارد شیوع شوی.")
     d = db.db()
     r = d.one("SELECT * FROM raid_users WHERE raid_id=? AND user_id=?", (st["id"], int(uid)))
     if not r:
@@ -80,7 +83,7 @@ def join(uid: int) -> dict:
         db.db().setv(f"raid:name:{st['id']}:{uid}", p["name"])
         st["participants"] = int(st.get("participants") or 0) + 1
         db.db().setv("raid", st)
-        return dict(ok=True, msg=(f"🛰 <b>ASSIGNMENT ACCEPTED</b>\n"
+        return dict(ok=True, msg=(f"🛰 <b>تکلیف پذیرفته شد</b>\n"
                                  f"واحد {p['name']} در عملیات <b>{st['name']}</b> ثبت شد.\n"
                                  f"«/raid» برای پنل ضربه."))
     return dict(ok=True, msg="🛰 تو در این عملیات ثبت شده‌ای — «/raid»")
@@ -94,17 +97,17 @@ def board() -> str:
     rows = db.db().q("""SELECT u.user_id, u.dmg, u.guard, u.support, u.analyze, u.strikes, p.name
                         FROM raid_users u LEFT JOIN players p ON p.user_id=u.user_id
                         WHERE u.raid_id=? ORDER BY u.dmg DESC LIMIT 8""", (st["id"],))
-    lines = [f"{st.get('emj','🌒')} <b>WORLD OPS — {st['name']}</b>",
-             f"❤️ {ui.bar(st['hp'], st['max_hp'], 12)} <code>{st['hp']:,.0f}</code>/{st['max_hp']:,.0f}",
-             f"👥 {int(st.get('participants') or 0)} عامل · ⚔ {int(st.get('strikes') or 0)} ضربه · "
-             f"⏱ {ui.eta(st['ends_at'])}",
-             "", "🥇 <b>CONTRIBUTION</b>"]
+    lines = [f"❤️ {ui.meter('جانِ باس', st['hp'], st['max_hp'], '', 12, 'val')}",
+             f"👥 {int(st.get('participants') or 0)} عامل · ⚔️ {int(st.get('strikes') or 0)} ضربه "
+             f"· ⏱ {ui.eta(st['ends_at'])}", "", "🥇 <b>مشارکت</b>"]
     for i, r in enumerate(rows, 1):
-        lines.append(f"{i}. {r['name']} — 💥{r['dmg']:,.0f} · 🛡{r['guard']:,.0f} · "
-                     f"❤️{r['support']:,.0f} · 🔬{r['analyze']:,.0f}")
+        lines.append(f"{i}. {r['name']} — 💥{ui.n(r['dmg'])} · 🛡{ui.n(r['guard'])} · "
+                     f"❤️{ui.n(r['support'])} · 🔬{ui.n(r['analyze'])}")
     if not rows:
-        lines.append("<i>هنوز ضربه‌ای ثبت نشده.</i>")
-    return "\n".join(lines)
+        lines.append("<i>هنوز ضربۀ ثبت‌شدۀ</i>")
+    return ui.card(f"یورش جهانی — {st['name']}", lines,
+                   stamp="تهدیدِ جهانی", code=st["id"],
+                   note="پنج شاخۀ جایزه: آسیب، دفاع، پشتیبانی، ضربۀ آخر، پژوهش.")
 
 
 def act(uid: int, action: str = "strike") -> dict:
@@ -114,10 +117,10 @@ def act(uid: int, action: str = "strike") -> dict:
     if not st or st.get("over"):
         return dict(ok=False, msg="🌒 رید فعال نیست.")
     if PL.on_cd(uid, "raid"):
-        return dict(ok=False, msg=f"⏳ {PL.cd_left(uid, 'raid'):.0f}s — هماهنگی تیمی.")
+        return dict(ok=False, msg=f"⏳ {ui.dur(PL.cd_left(uid, 'raid'))} — هماهنگیِ تیمی.")
     a = ACTIONS.get(action)
     if not a:
-        return dict(ok=False, msg="❔ اکشن نامعتبر.")
+        return dict(ok=False, msg="❔ کردار نامعتبر.")
     p = PL.get(uid)
     r = db.db().one("SELECT * FROM raid_users WHERE raid_id=? AND user_id=?", (st["id"], int(uid)))
     if not r:
@@ -166,7 +169,7 @@ def act(uid: int, action: str = "strike") -> dict:
         bid_base = blk.get("tid")
         res = research.add_points(uid, bid_base, 22, "raid")
         note = (f"\n🔬 داده‌ی حیاتی استخراج شد"
-                + (f" · 🚨 <b>STAGE UP</b> → {research.STAGES[res['stage']]['label']}" if res.get("advanced") else ""))
+                + (f" · 🚨 <b>ارتقای مرحله</b> → {research.STAGES[res['stage']]['label']}" if res.get("advanced") else ""))
     else:  # regroup
         PL.add_res(uid, energy=24)
         note = "\n🔋 واحد دوباره سازمان‌دهی شد"
@@ -179,7 +182,7 @@ def act(uid: int, action: str = "strike") -> dict:
         db.db().apply(int(uid), hp=max(1.0, float(p["hp"]) - hurt))
         if float(p["hp"]) - hurt <= 0:
             PL.die(uid, "WORLD_RAID")
-            note += "\n☠️ <b>AGENT DOWN</b> — واحد پشتیبانی تو را برداشت"
+            note += "\n☠️ <b>عامل از پا درآمده</b> — واحد پشتیبانی تو را برداشت"
     st["strikes"] = int(st.get("strikes") or 0) + 1
     st["log"] = ((st.get("log") or []) + [f"{PL.name_of(uid)} · {a['name']}"])[-6:]
     PL.progress(uid, "raid_strike", 1)
@@ -221,8 +224,8 @@ def finish(won: bool = None) -> dict:
             PL.track_stat(int(r["user_id"]), "raids", 1)
             import division
             division.credit_activity(int(r["user_id"]), "raid", 1)
-        labels = dict(damage="🥇 Most Damage", defense="🛡 Best Defense", support="❤️ Best Support",
-                      last_hit="🎯 Last Hit", research="🔬 Best Research")
+        labels = dict(damage="🥇 بیشترین آسیب", defense="🛡 بهترین دفاع", support="❤️ بهترین پشتیبانی",
+                      last_hit="🎯 ضربه آخر", research="🔬 بهترین پژوهش")
         for k, r in awards.items():
             if r:
                 nm = db.db().getv(f"raid:name:{st['id']}:{r['user_id']}", "") or PL.name_of(int(r["user_id"]))
@@ -231,7 +234,7 @@ def finish(won: bool = None) -> dict:
                     bonus["cores"] = 2
                 PL.add_res(int(r["user_id"]), **bonus)
                 lines.append(f"{labels[k]} → <b>{nm}</b>")
-        txt = (f"🏆 <b>WORLD THREAT NEUTRALIZED</b> — {st.get('name')}\n"
+        txt = (f"🏆 <b>تهدید جهانی خنثی شد</b> — {st.get('name')}\n"
                f"👥 {len(rows)} عامل · ⚔ {int(st.get('strikes') or 0)} ضربه\n"
                + ("\n".join(lines) if lines else "")
                + f"\n🪙 جوایز توزیع شد · <i>پرونده برای تجزیه‌وتحلیل بسته شد.</i>")
@@ -239,7 +242,7 @@ def finish(won: bool = None) -> dict:
         for r in rows:
             PL.add_xp(int(r["user_id"]), 14)
             PL.add_res(int(r["user_id"]), credits=round(float(rw.get("credits", 1000)) * 0.12, 0))
-        txt = (f"⌛ <b>OPERATION CLOSED</b> — {st.get('name')}\n"
+        txt = (f"⌛ <b>عملیات بسته شد</b> — {st.get('name')}\n"
                f"باس زنده ماند؛ خسارت محدود وارد شد ({float(st.get('hp',0))/max(1.0,float(st.get('max_hp',1)))*100:.0f}% HP باقی). "
                f"جایزه‌ی مشارکت پرداخت شد.")
     st["status"] = "done"

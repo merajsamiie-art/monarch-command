@@ -81,7 +81,7 @@ PATTERNS = [
      dict(dmg=1.0, slow=2, knock=8), "موجِ فشاری؛ تعادل حریف را در هم می‌شکند."),
 ]
 
-FALLBACK = ("kinetic", 1.0, dict(dmg=0.92), "ضربه‌ی ثبت‌شده در پرونده‌ی MONARCH.")
+FALLBACK = ("kinetic", 1.0, dict(dmg=0.92), "ضربه‌ی ثبت‌شده در پرونده‌ی مانارچ.")
 
 EMJ_BY_TAG = {
     "atomic": "atom", "ice": "ice", "electric": "spark", "acid": "acid", "fire": "flame",
@@ -162,7 +162,7 @@ def build(aid: str, t: dict = None, is_ult: bool = False) -> dict:
         power = round(power * (1 + 0.03 * idx), 2)
     return dict(id=aid, name=title_of(aid), emj=EMJ_BY_TAG.get(tag, "ability"), cost=cost,
                 cd=cd, power=power, req=req, eff=eff, tag=tag,
-                desc=f"{desc} · پرونده‌ی {(t or {}).get('name', 'MONARCH')}")
+                desc=f"{desc} · پرونده‌ی {(t or {}).get('name', 'مانارچ')}")
 
 
 def build_passive(pid: str, t: dict = None) -> dict:

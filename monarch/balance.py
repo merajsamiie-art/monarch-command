@@ -795,11 +795,11 @@ def victory_payout(t: dict, *, rank: int = 1, first_kill: bool = False,
 
 # ─────────── رتبه ───────────
 RANKS = {
-    "recruit": dict(name="MONARCH Recruit", emj="🛰", idx=1, need=1),
-    "researcher": dict(name="Researcher", emj="🔬", idx=3, need=3),
-    "field_agent": dict(name="Field Agent", emj="📡", idx=7, need=7),
-    "titan_specialist": dict(name="Titan Specialist", emj="⚔️", idx=12, need=12),
-    "alpha_commander": dict(name="Alpha Commander", emj="👑", idx=18, need=18),
+    "recruit": dict(name="تازه‌وارث مانارچ", emj="🛰", idx=1, need=1),
+    "researcher": dict(name="پژوهشگر", emj="🔬", idx=3, need=3),
+    "field_agent": dict(name="عامل میدانی", emj="📡", idx=7, need=7),
+    "titan_specialist": dict(name="متخصص تایتان", emj="⚔️", idx=12, need=12),
+    "alpha_commander": dict(name="فرمانده آلفا", emj="👑", idx=18, need=18),
 }
 
 

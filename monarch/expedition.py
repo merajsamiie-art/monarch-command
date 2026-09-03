@@ -65,14 +65,14 @@ def start(uid: int, zone: str, chat: dict = None) -> dict:
     if not p:
         return dict(ok=False, msg="🔒 /start")
     if PL.is_dead(p):
-        return dict(ok=False, msg="☠️ در Recovery Mode هیچ تیمی اعزام نمی‌شود.")
+        return dict(ok=False, msg="☠️ در حالت بازیابی هیچ تیمی اعزام نمی‌شود.")
     st = status(uid)
     if st.get("active"):
         return dict(ok=False, msg=f"⏳ کاوش فعال داری ({ZONES.get(st['zone'], {}).get('name', '')}) — "
                                  f"{st['left']/60:.0f} دقیقه.")
     z = ZONES.get(zone)
     if not z:
-        return dict(ok=False, msg="🗺 این منطقه در نقشه‌ی MONARCH نیست. «/explore» برای لیست.")
+        return dict(ok=False, msg="🗺 این منطقه در نقشه‌ی مانارچ نیست. «/explore» برای لیست.")
     if int(p.get("rank") or 1) < z["need_rank"]:
         return dict(ok=False, msg=f"🔒 دسترسی سطح {z['need_rank']} لازم است.")
     if PL.on_cd(uid, "exped"):
@@ -88,7 +88,7 @@ def start(uid: int, zone: str, chat: dict = None) -> dict:
     eng = division.facility_of(uid, "engineering")
     if eng:
         PL.set_row(uid, expedition_until=float(p["expedition_until"]) - mins * 60 * 0.06 * eng)
-    return dict(ok=True, msg=(f"🗺 <b>EXPEDITION DEPLOYED</b>\n{z['name']} · تیم سطح {tier}\n"
+    return dict(ok=True, msg=(f"🗺 <b>کاوش اعزام شد</b>\n{z['name']} · تیم سطح {tier}\n"
                               f"⏱ {mins} دقیقه · 📻 «/explore report» برای وضعیت\n"
                               f"<i>{z['desc']}</i>"), minutes=mins)
 
@@ -103,7 +103,7 @@ def abort(uid: int) -> dict:
     PL = __import__("player")
     PL.set_row(uid, expedition_until=0, expedition_zone=None, expedition_tier=0)
     PL.spend(uid, credits=-200)
-    return dict(ok=True, msg="💨 <b>RECALL</b> — تیم زودتر فراخوانده شد؛ ۲۰۰ MC هزینه‌ی عملیات.")
+    return dict(ok=True, msg="💨 <b>فراخوان</b> — تیم زودتر فراخوانده شد؛ ۲۰۰ اعتبار هزینه‌ی عملیات.")
 
 
 def loot_table(z: dict, tier: int, fail: bool) -> dict:
@@ -145,9 +145,9 @@ def claim(uid: int, chat: dict = None) -> dict:
     PL.add_res(uid, **loot)
     xp = round(random.uniform(10, 22) * (0.6 if fail else 1.0) * (1 + 0.25 * tier), 1)
     PL.add_xp(uid, xp)
-    lines = ["🗺 <b>EXPEDITION REPORT</b>", f"{z['name']} · سطح {tier}",
-             "❌ <b>LOSS</b> — تیم با آسیب بازگشت؛ غنیمت ناچیز." if fail
-             else "✅ <b>RECOVERED</b>"]
+    lines = ["🗺 <b>گزارش کاوش</b>", f"{z['name']} · سطح {tier}",
+             "❌ <b>شکست</b> — تیم با آسیب بازگشت؛ غنیمت ناچیز." if fail
+             else "✅ <b>بهبود</b>"]
     icon = dict(credits="🪙", cells="🔋", mats="🔩", dna="🧬", fdata="📡", cores="💎")
     lines.append(" · ".join(f"{icon[k]} {v:g}" for k, v in loot.items() if v))
     lines.append(f"✨ +{xp} XP")
@@ -158,7 +158,7 @@ def claim(uid: int, chat: dict = None) -> dict:
         w = [1 / (1 + balance.titans_rarity_idx(t["rar"])) for t in pool]
         t = random.choices(pool, weights=w, k=1)[0]
         encounter = t["id"]
-        lines += ["", f"🚨 <b>TITAN CONTACT</b> — {t['emj']} {t['name']} روی خط کاوش تو قرار گرفته!"]
+        lines += ["", f"🚨 <b>تماس با تایتان</b> — {t['emj']} {t['name']} روی خط کاوش تو قرار گرفته!"]
     return dict(ok=True, msg="\n".join(lines), fail=fail, loot=loot, encounter=encounter,
                 auto_combat=bool(encounter))
 

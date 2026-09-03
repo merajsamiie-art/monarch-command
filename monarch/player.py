@@ -148,7 +148,7 @@ def dead_left(p: dict) -> float:
 
 
 def die(uid: int, reason: str = "COMBAT", protect_legendary: bool = True) -> dict:
-    """☠️ AGENT DOWN — ۱۰ دقیقه Recovery + Drop بخشی از منابعِ محافظت‌نشده."""
+    """☠️ AGENT DOWN — ۱۰ دقیقه بازیابی + Drop بخشی از منابعِ محافظت‌نشده."""
     uid = int(uid)
     p = get(uid)
     if not p:
@@ -201,7 +201,7 @@ def vault_store(uid: int, amount: float) -> dict:
     if amt <= 0:
         return dict(ok=False, msg="🏦 خزنه پر است یا اعتباری نیست.")
     add_res(uid, credits=-amt, vault=amt)
-    return dict(ok=True, msg=f"🏦 <b>{amt:,.0f} MC</b> به خزنه‌ی Division منتقل شد — از Drop در امان.")
+    return dict(ok=True, msg=f"🏦 <b>{amt:,.0f} اعتبار</b> به خزنه‌ی سازمان منتقل شد — از Drop در امان.")
 
 
 def vault_withdraw(uid: int, amount: float) -> dict:
@@ -210,7 +210,7 @@ def vault_withdraw(uid: int, amount: float) -> dict:
     if amt <= 0:
         return dict(ok=False, msg="🏦 خزنه خالی است.")
     add_res(uid, vault=-amt, credits=amt)
-    return dict(ok=True, msg=f"🏦 <b>{amt:,.0f} MC</b> از خزنه بیرون آمد.")
+    return dict(ok=True, msg=f"🏦 <b>{amt:,.0f} اعتبار</b> از خزنه بیرون آمد.")
 
 
 # ─────────── کول‌داون ───────────
@@ -322,7 +322,7 @@ def equip(uid: int, iid: str) -> dict:
     db.db().ex(f"UPDATE items SET equipped=0 WHERE user_id=? AND item_id IN ({ph})",
                (int(uid), *rivals))
     db.db().ex("UPDATE items SET equipped=1 WHERE user_id=? AND item_id=?", (int(uid), iid))
-    return dict(ok=True, msg=f"⚙️ <b>EQUIPPED</b> — {it['name']}")
+    return dict(ok=True, msg=f"⚙️ <b>مجهز شد</b> — {it['name']}")
 
 
 def unequip(uid: int, iid: str) -> dict:
@@ -360,7 +360,13 @@ def power_rating(p: dict) -> int:
                int(p.get("boss_kills") or 0) * 160 + int(p.get("arena_rating") or 1000) * 0.18)
 
 
+def _pair(items: list, per: int = 3) -> list:
+    """چیدنِ برچسب‌ها در ردیف‌های کوتاه (کارتِ فشرده)."""
+    return [" " + " · " + " ".join(items[i:i + per]) for i in range(0, len(items), per)]
+
+
 def card(p: dict, full: bool = True) -> str:
+    """کارتِ عامل — داده را می‌چیند و چارچوبِ پرونده را به ui می‌سپارد."""
     import ui
     b = __import__("economy").stats_of(p)
     d = db.db()
@@ -368,34 +374,30 @@ def card(p: dict, full: bool = True) -> str:
     for r in d.q("SELECT item_id, level FROM items WHERE user_id=? AND equipped=1 AND qty>0", (p["user_id"],)):
         it = __import__("economy").ITEMS.get(r["item_id"]) or {}
         gear.append(f"{it.get('emj', '⚙️')} {it.get('name', r['item_id'])}"
-                    + (f" <code>MK+{r['level']}</code>" if r.get("level") else ""))
+                    + (f" <code>+{r['level']}</code>" if r.get("level") else ""))
     import research
-    bonds = research.bond_rows(p["user_id"])
-    lines = [
-        "🛰 <b>PERSONNEL FILE</b> · <code>MONARCH-LEVEL CLEARANCE</code>",
-        f"👤 <b>{p.get('name')}</b>",
-        f"🎖 {rank_label(p)} · <code>Rank {int(p.get('rank') or 1)}</code>",
-        f"✨ {ui.bar(float(p.get('xp') or 0), balance.xp_need(int(p.get('rank') or 1)), 12)} "
-        f"<i>{ui.n(p.get('xp'))}/{ui.n(balance.xp_need(int(p.get('rank') or 1)))} XP</i>",
-        "",
-        f"❤️ <b>{b['hp']:.0f}</b>/{b['max_hp']:.0f} · 🔋 <b>{b['energy']:.0f}</b>/{b['max_energy']:.0f} "
-        f"· 🧠 <b>{float(p.get('resolve') or 0):.0f}</b>",
-        f"⚔️ ATK <code>{b['atk']:.1f}</code> · 🛡 DEF <code>{b['df']:.1f}</code> · "
-        f"⚡ SPD <code>{b['spd']:.1f}</code>",
-        f"🎯 ACC <code>{b['acc'] * 100:.0f}%</code> · 🌀 DODGE <code>{b['dodge'] * 100:.0f}%</code> · "
-        f"💚 REGEN <code>{b['regen']:.1f}</code>",
-        f"🏷 Power Rating: <b>{power_rating(p):,}</b>",
-    ]
-    if full:
-        res = " · ".join(f"{m['icon']}{ui.n(p.get(k))}" for k, m in __import__("economy").RES.items())
-        lines += ["", f"💼 <b>RESOURCES</b>", res]
-        lines += ["", f"🗄 <b>DIVISION</b>", " · ".join(gear) if gear else "<i>بدون تجهیز فعال — /shop</i>"]
-        if bonds:
-            bs = " · ".join(f"{(__import__('titans').get(bt['titan_id']) or {}).get('emj','🦖')}"
-                            f"{(__import__('titans').get(bt['titan_id']) or {}).get('name','?')} B{bt['bond']}"
-                            for bt in bonds[:6])
-            lines += ["", f"🧬 <b>TITAN BONDS</b>", bs]
-    return "\n".join(lines)
+    bonds = [f"{(__import__('titans').get(bt['titan_id']) or {}).get('emj', '🦖')}"
+             f" {(__import__('titans').get(bt['titan_id']) or {}).get('name', '?')}"
+             f" <i>پیوندِ {bt['bond']}</i>" for bt in research.bond_rows(p["user_id"])[:6]]
+    eco = __import__("economy")
+    dead = ""
+    if is_dead(p):
+        dead = f"{max(0, int(dead_left(p) // 60))} دقیقه"
+    dat = dict(
+        name=p.get("name") or "عامل", handle=("@" + p["username"]) if p.get("username") else "",
+        rank=int(p.get("rank") or 1), rank_name=rank_label(p),
+        xp=float(p.get("xp") or 0), xp_need=balance.xp_need(int(p.get("rank") or 1)),
+        hp=b["hp"], max_hp=b["max_hp"], energy=b["energy"], max_energy=b["max_energy"],
+        resolve=float(p.get("resolve") or 0), power=power_rating(p),
+        atk=b["atk"], df=b["df"], spd=b["spd"], regen=b["regen"],
+        acc_txt=f"{b['acc'] * 100:.0f}٪", dodge_txt=f"{b['dodge'] * 100:.0f}٪",
+        code=abs(hash(("agent", p["user_id"]))) % 90000 + 1000, cls="مجوزِ مانارچ", dead=dead,
+        res_lines=(_pair(["{} {}: <b>{}</b>".format(m["icon"], m["name"], ui.n(p.get(k)))
+                          for k, m in eco.RES.items()])) if full else None,
+        gear=(gear or ["<i>هیچ تجهیزی فعال نیست — /shop</i>"]) if full else None,
+        bonds=bonds or None,
+    )
+    return ui.agent_card(dat)
 
 
 def top_by(field: str, limit: int = 10) -> list:

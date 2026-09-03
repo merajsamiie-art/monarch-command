@@ -10,68 +10,68 @@ from db import now
 
 # ── منابع ──
 RES = {
-    "credits": dict(name="MONARCH Credit", emj="coin", icon="🪙", unit="MC", sellable=False),
-    "cores": dict(name="Titan Core", emj="core", icon="💎", unit="Core", sellable=False),
-    "dna": dict(name="DNA Fragment", emj="dna", icon="🧬", unit="DNA", sellable=True, base=90),
-    "cells": dict(name="Energy Cell", emj="cell", icon="🔋", unit="Cell", sellable=True, base=40),
-    "mats": dict(name="Titan Material", emj="material", icon="🔩", unit="Mat", sellable=True, base=55),
-    "fdata": dict(name="Classified Data", emj="data", icon="📡", unit="Data", sellable=True, base=120),
+    "credits": dict(name="اعتبار مانارچ", emj="coin", icon="🪙", unit="اعتبار", sellable=False),
+    "cores": dict(name="هسته تایتان", emj="core", icon="💎", unit="هستۀ تایتان", sellable=False),
+    "dna": dict(name="قطعه ژنتیکی", emj="dna", icon="🧬", unit="قطعۀ ژنتیکی", sellable=True, base=90),
+    "cells": dict(name="پیل انرژی", emj="cell", icon="🔋", unit="پیل انرژی", sellable=True, base=40),
+    "mats": dict(name="ماده تایتان", emj="material", icon="🔩", unit="مادۀ تایتان", sellable=True, base=55),
+    "fdata": dict(name="داده محرمانه", emj="data", icon="📡", unit="دادۀ محرمانه", sellable=True, base=120),
 }
 
 # ── تجهیزات (فقط با بازی به‌دست می‌آید؛ خرید مستقیم قدرت با پول = ممنوع) ──
 ITEMS = {
     # rigs
-    "rig_field": dict(name="Field Rig MK-I", emj="gear", kind="rig", tier=1, slot="rig",
+    "rig_field": dict(name="جهاز صحرایی — ۱", emj="gear", kind="rig", tier=1, slot="rig",
                       mods=dict(hp=26, df=2.4, spd=0.8), cost=3400, need_rank=1,
-                      desc="استخوان‌بندی میدانی MONARCH — اولین لایه‌ی بقا."),
-    "rig_recon": dict(name="Recon Rig MK-II", emj="radar", kind="rig", tier=2, slot="rig",
+                      desc="استخوان‌بندی میدانی مانارچ — اولین لایه‌ی بقا."),
+    "rig_recon": dict(name="جهاز شناسایی — ۲", emj="radar", kind="rig", tier=2, slot="rig",
                       mods=dict(hp=52, df=4.2, spd=1.6, dodge=0.02, acc=0.02), cost=11000, need_rank=4,
                       desc="استتار راداری + حسگر لرزه‌ای."),
-    "rig_heavy": dict(name="Bunker Rig MK-III", emj="shield_doc", kind="rig", tier=3, slot="rig",
+    "rig_heavy": dict(name="جهاز سنگر — ۳", emj="shield_doc", kind="rig", tier=3, slot="rig",
                       mods=dict(hp=110, df=9.0, regen=1.4, spd=-0.6), cost=34000, need_rank=8,
                       desc="زره بتنی؛ کند اما تایتان‌کُش."),
-    "rig_alpha": dict(name="Alpha Command Rig", emj="crown", kind="rig", tier=4, slot="rig",
+    "rig_alpha": dict(name="جهاز فرماندهی آلفا", emj="crown", kind="rig", tier=4, slot="rig",
                       mods=dict(hp=180, df=13.0, atk=6.0, regen=2.2, acc=0.04), cost=98000, need_rank=14,
                       desc="تنها سه نمونه ساخته شد؛ هرکدام یک پرونده‌ی زنده است."),
     # weapons
-    "wp_harpoon": dict(name="TITAN-1 Harpoon", emj="sword", kind="weapon", tier=1, slot="weapon",
+    "wp_harpoon": dict(name="نیزه‌انداز تایتان", emj="sword", kind="weapon", tier=1, slot="weapon",
                        mods=dict(atk=3.4, acc=0.015), cost=2600, need_rank=1,
                        desc="هارپون ضدتایتان؛ entry-level مونارش."),
-    "wp_ion": dict(name="Ion Repeater", emj="spark", kind="weapon", tier=2, slot="weapon",
+    "wp_ion": dict(name="تکرارکننده یون", emj="spark", kind="weapon", tier=2, slot="weapon",
                     mods=dict(atk=7.2, crit=0.03, tags=["tech"]), cost=13000, need_rank=5,
                     desc="رگبار یونی — عليه تایتان‌های مکانیکی عالی."),
-    "wp_seismic": dict(name="Seismic Cannon", emj="heavy", kind="weapon", tier=3, slot="weapon",
+    "wp_seismic": dict(name="توپ لرزه‌ای", emj="heavy", kind="weapon", tier=3, slot="weapon",
                        mods=dict(atk=13.5, crit=0.02, tags=["sonic"], energy=10), cost=46000, need_rank=9,
                        desc="موج لرزه‌ای؛ نقطه‌ی ضعف بلورها و استخوان."),
-    "wp_orca": dict(name="ORCA Resonance Emitter", emj="signal", kind="weapon", tier=4, slot="weapon",
+    "wp_orca": dict(name="فرستنده تشدید اورکا", emj="signal", kind="weapon", tier=4, slot="weapon",
                     mods=dict(atk=21.0, acc=0.05, tags=["sonic", "psychic"], energy=26), cost=132000, need_rank=15,
                     desc="فرکانس آلفا؛ هم سلاح، هم فرمان."),
     # support modules
-    "md_scanner": dict(name="Deep Scanner", emj="track", kind="module", tier=1, slot="module",
+    "md_scanner": dict(name="اسکنر عمیق", emj="track", kind="module", tier=1, slot="module",
                        mods=dict(), cost=4200, need_rank=2, extra=dict(track=0.35),
                        desc="+۳۵٪ بازدهی ردیابی سیگنال."),
-    "md_labkit": dict(name="Mobile Lab Kit", emj="research", kind="module", tier=2, slot="module",
+    "md_labkit": dict(name="کیت آزمایشگاه سیار", emj="research", kind="module", tier=2, slot="module",
                       mods=dict(), cost=14000, need_rank=6, extra=dict(lab_speed=0.25, lab_fail=-0.08),
                       desc="تحلیل سریع‌تر، شکست کمتر."),
-    "md_medbay": dict(name="Nano Medbay", emj="medkit", kind="module", tier=3, slot="module",
+    "md_medbay": dict(name="بست درمان نانو", emj="medkit", kind="module", tier=3, slot="module",
                       mods=dict(regen=2.2), cost=30000, need_rank=8, extra=dict(heal=0.25),
                       desc="ترمیم میدانی؛ مرده‌ها را زنده نگه می‌دارد."),
-    "md_shieldgen": dict(name="Aegis Field Gen", emj="guard", kind="module", tier=4, slot="module",
+    "md_shieldgen": dict(name="تولیدکننده سپر اجیس", emj="guard", kind="module", tier=4, slot="module",
                          mods=dict(df=4.0), cost=72000, need_rank=12, extra=dict(shield=0.30),
                          desc="سپر انرژی: ۳۰٪ از آسیب گارد را می‌گیرد."),
     # consumables
-    "cs_stim": dict(name="Titan Stim", emj="cell", kind="consumable", cost=600,
+    "cs_stim": dict(name="محرک تایتان", emj="cell", kind="consumable", cost=600,
                     use=dict(energy=45, resolve=6), desc="شارژ سریع عصبی."),
-    "cs_medkit": dict(name="Field Medkit", emj="medkit", kind="consumable", cost=900,
-                      use=dict(hp=90), desc="۹۰ HP فوری."),
-    "cs_antitoxin": dict(name="Anti-Corrosion", emj="acid", kind="consumable", cost=700,
+    "cs_medkit": dict(name="کیت کمک اولیه", emj="medkit", kind="consumable", cost=900,
+                      use=dict(hp=90), desc="۹۰ جان، فوری."),
+    "cs_antitoxin": dict(name="ضدخورندگی", emj="acid", kind="consumable", cost=700,
                          use=dict(clean=3), desc="پاک‌سازی وضعیت‌های منفی."),
-    "cs_focus": dict(name="Alpha Focus Serum", emj="intel", kind="consumable", cost=2400,
-                     use=dict(resolve=26, charge=25), desc="تمرکز و شارژ — برای شکار Legendary."),
-    "cs_beacon": dict(name="Signal Beacon", emj="signal", kind="consumable", cost=1800,
-                      use=dict(research=45), desc="+۴۵ امتیاز تحقیق روی آخرین هدف."),
-    "cs_core_shard": dict(name="Core Shard", emj="core", kind="material", cost=9000,
-                          desc="خردۀ هسته — برای ارتقای تایتان‌اکس لازم است."),
+    "cs_focus": dict(name="سرم تمرکز آلفا", emj="intel", kind="consumable", cost=2400,
+                     use=dict(resolve=26, charge=25), desc="تمرکز و شارژ — برای شکارِ افسانه‌ای."),
+    "cs_beacon": dict(name="منبع سیگنال", emj="signal", kind="consumable", cost=1800,
+                      use=dict(research=45), desc="+۴۵ امتیاز پژوهش روی آخرین هدف."),
+    "cs_core_shard": dict(name="قطعه هسته", emj="core", kind="material", cost=9000,
+                          desc="خردهٔ هسته — برای ارتقای تایتان لازم است."),
 }
 
 ABILITY_ITEMS = {
@@ -82,6 +82,39 @@ ABILITY_ITEMS = {
 }
 
 SLOTS = ("rig", "weapon", "module")
+
+# برچسبِ فارسیِ مودها — کارتِ فروشگاه هیچ‌وقت `atk+7.2` چاپ نمی‌کند
+MOD_FA = dict(hp="جان", df="سپر", atk="آسیب", spd="سرعت", acc="دقت", dodge="جاخالی",
+              regen="بازیابی", crit="بحرانی", energy="انرژی", resolve="عزم")
+TAG_FA = dict(tech="فناوری", sonic="صوتی", psychic="ذهنی", atomic="هسته‌ای", beast="وحشی",
+              energy="انرژی", ancient="باستان", cryo="یخی", fire="آتشین", pollution="آلاینده",
+              gravity="گرانشی", light="نوری")
+
+
+def _num(v) -> str:
+    f = float(v)
+    return f"{abs(f):g}"
+
+
+def mod_text(it: dict) -> str:
+    """«آسیب +۷٫۲ · بحرانی +۰٫۰۳ · برچسب: فناوری»"""
+    out = []
+    for k, v in (it.get("mods") or {}).items():
+        lab = MOD_FA.get(k)
+        if k == "tags":
+            if v:
+                out.append("برچسب: " + "، ".join(TAG_FA.get(str(x), str(x)) for x in v))
+            continue
+        if lab is None or not isinstance(v, (int, float)):
+            continue
+        sign = "+" if float(v) >= 0 else "−"
+        out.append(f"{lab} {sign}{_num(v)}")
+    for k, v in (it.get("extra") or {}).items():
+        lab = dict(track="ردیابی", lab_speed="سرعتِ آزمایشگاه", lab_fail="ریسکِ آزمایشگاه",
+                   heal="ترمیم", shield="سپر").get(k)
+        if lab and isinstance(v, (int, float)):
+            out.append(f"{lab} {int(round(abs(float(v)) * 100))}٪")
+    return " · ".join(out)
 
 
 def catalog(kind: str = None) -> list:
@@ -111,21 +144,21 @@ def buy(uid: int, iid: str) -> dict:
     if not p:
         return dict(ok=False, msg="🔒 ابتدا /start.")
     if PL.is_dead(p):
-        return dict(ok=False, msg="☠️ در Recovery Mode خرید ممکن نیست.")
+        return dict(ok=False, msg="☠️ در حالت بازیابی خرید ممکن نیست.")
     if int(p.get("rank") or 1) < it.get("need_rank", 1):
-        return dict(ok=False, msg=f"🔒 نیازمند رتبه‌ی {it['need_rank']} — MONARCH Access Levels.")
+        return dict(ok=False, msg=f"🔒 نیازمند رتبه‌ی {it['need_rank']} — سطحِ دسترسی مانارچ لازم است.")
     if PL.on_cd(uid, "shop"):
         return dict(ok=False, msg=f"⏳ {PL.cd_left(uid, 'shop')} ثانیه صبر.")
     cost = price_of(iid)
     if float(p.get("credits") or 0) < cost:
-        return dict(ok=False, msg=f"🪙 کمبود اعتبار: {cost - float(p['credits']):,.0f} MC لازم است.")
+        return dict(ok=False, msg=f"🪙 کمبود اعتبار: {cost - float(p['credits']):,.0f} اعتبار لازم است.")
     if PL.on_cd(uid, "shop") is False:
         PL.set_cd(uid, "shop", config.CD_SHOP)
     PL.spend(uid, credits=-cost)
     PL.add_item(uid, iid, 1)
     db.db().feed("buy", f"{uid}:{iid}")
-    return dict(ok=True, msg=(f"{E('coin')} <b>ACQUIRED</b> — {it['name']}\n"
-                              f"🪙 −{int(cost)} MC · «/equip {iid}» برای مجهزکردن"))
+    return dict(ok=True, msg=(f"{E('coin')} <b>دریافت شد</b> — {it['name']}\n"
+                              f"🪙 −{int(cost):,} اعتبار · «/equip {it.get('name') or iid}» برای مجهزکردن"))
 
 
 def E(key):
@@ -136,7 +169,7 @@ def E(key):
 def sell(uid: int, res: str, qty: float) -> dict:
     meta = RES.get(res)
     if not meta or not meta.get("sellable"):
-        return dict(ok=False, msg="🔒 این منبع در بازار MONARCH قابل‌فروش نیست (Core/اعتبار).")
+        return dict(ok=False, msg="🔒 این منبع در بازار مانارچ قابل‌فروش نیست (Core/اعتبار).")
     p = PL.get(uid)
     if not p or float(p.get(res) or 0) < qty or qty <= 0:
         return dict(ok=False, msg="📦 مقدار نامعتبر.")
@@ -144,8 +177,8 @@ def sell(uid: int, res: str, qty: float) -> dict:
     total = unit * qty
     PL.spend(uid, **{res: -qty})
     PL.add_res(uid, credits=total)
-    return dict(ok=True, msg=(f"🏷 <b>SALE ROUTED</b>\n{meta['icon']} {qty:g} × {meta['name']} "
-                              f"→ 🪙 <b>{total:,.0f} MC</b> @ {unit:,.0f}"))
+    return dict(ok=True, msg=(f"🏷 <b>فروش ثبت شد</b>\n{meta['icon']} {qty:g} × {meta['name']} "
+                              f"→ 🪙 <b>{total:,.0f} اعتبار</b> @ {unit:,.0f}"))
 
 
 def market_seed() -> int:
@@ -175,7 +208,7 @@ def market_board() -> str:
         pr = market_price(k)
         base = m["base"]
         arrow = "▲" if pr > base else "▼" if pr < base else "•"
-        rows.append(f"{m['icon']} {m['name']:<16} <b>{pr:,.0f}</b> MC {arrow}")
+        rows.append(f"{m['icon']} {m['name']} — <b>{pr:,.0f}</b> اعتبار {arrow}")
     return "\n".join(rows)
 
 
@@ -199,14 +232,14 @@ def upgrade(uid: int, iid: str) -> dict:
     p = PL.get(uid)
     c = upgrade_cost(uid, iid)
     if c["lvl"] >= c["max"]:
-        return dict(ok=False, msg="⚙️ این تجهیز در بالاترین سطح مهندسی MONARCH است.")
+        return dict(ok=False, msg="⚙️ این تجهیز در بالاترین سطح مهندسی مانارچ است.")
     have = {k: float(p.get(k) or 0) for k in ("mats", "cells", "credits")}
     miss = [k for k, v in (("mats", c["mats"]), ("cells", c["cells"]), ("credits", c["credits"])) if have[k] < v]
     if miss:
         return dict(ok=False, msg="📦 کمبود: " + "، ".join(f"{RES[k]['name']}" for k in miss))
     PL.spend(uid, mats=-c["mats"], cells=-c["cells"], credits=-int(c["credits"]))
     PL.item_level(uid, iid, c["lvl"] + 1)
-    return dict(ok=True, msg=f"⚙️ <b>UPGRADE COMPLETE</b> — {it['name']} MK+{c['lvl'] + 1}")
+    return dict(ok=True, msg=f"⚙️ <b>ارتقا انجام شد</b> — {it['name']} MK+{c['lvl'] + 1}")
 
 
 def gear_mods(uid: int) -> tuple:
@@ -283,19 +316,19 @@ def stats_of(p: dict) -> dict:
 
 def bounty_place(uid: int, target: int, amount: float) -> dict:
     if uid == target:
-        return dict(ok=False, msg="🎯 جایزه روی سر خودت؟ MONARCH این را ثبت می‌کند.")
+        return dict(ok=False, msg="🎯 جایزه روی سر خودت؟ مانارچ این را ثبت می‌کند.")
     if amount < config.BOUNTY_MIN:
-        return dict(ok=False, msg=f"🎯 حداقل جایزه {config.BOUNTY_MIN} MC.")
+        return dict(ok=False, msg=f"🎯 کمینۀ جایزه {config.BOUNTY_MIN} اعتبار.")
     p = PL.get(uid)
     if not p or float(p.get("credits") or 0) < amount:
         return dict(ok=False, msg="🪙 اعتبار کافی نیست.")
     if not PL.get(target):
-        return dict(ok=False, msg="📁 آن بازیکن در پرونده‌ی MONARCH نیست.")
+        return dict(ok=False, msg="📁 آن بازیکن در پرونده‌ی مانارچ نیست.")
     PL.spend(uid, credits=-amount)
     b = db.db().getv("bounties", {}) or {}
     b[str(target)] = round(float(b.get(str(target), 0)) + amount, 0)
     db.db().setv("bounties", b)
-    return dict(ok=True, msg=f"🎯 <b>BOUNTY POSTED</b> — {amount:,.0f} MC روی سر {PL.name_of(target)}")
+    return dict(ok=True, msg=f"🎯 <b>جایزه ثبت شد</b> — {amount:,.0f} اعتبار روی سر {PL.name_of(target)}")
 
 
 def bounty_of(uid: int) -> float:
@@ -329,7 +362,7 @@ MISSIONS = {
                  rw=dict(credits=1500, xp=34, cores=1)),
     "expedition": dict(name="تکمیل ۱ کاوش", emj="mission", key="exped", need=1,
                        rw=dict(credits=900, xp=20, mats=2)),
-    "puzzle": dict(name="حل ۱ رمزنگاری MONARCH", emj="binary", key="puzzle", need=1,
+    "puzzle": dict(name="حل ۱ رمزنگاری مانارچ", emj="binary", key="puzzle", need=1,
                    rw=dict(credits=650, xp=16, dna=1)),
 }
 
@@ -382,7 +415,7 @@ def claim_mission(uid: int, mid: str) -> dict:
         PL.add_xp(uid, rw["xp"])
     txt = " · ".join(f"{'🪙' if k == 'credits' else '✨' if k == 'xp' else RES.get(k, {}).get('icon', '📦')}{v:g}"
                      for k, v in rw.items())
-    return dict(ok=True, msg=f"🎁 <b>MISSION CLEARED</b> — {MISSIONS[mid]['name']}\n{txt}")
+    return dict(ok=True, msg=f"🎁 <b>مأموریت انجام شد</b> — {MISSIONS[mid]['name']}\n{txt}")
 
 
 def mission_board(uid: int) -> str:
@@ -403,7 +436,7 @@ def checkin(uid: int) -> dict:
     today = db.local_day()
     p = PL.get(uid) or {}
     if p.get("last_seen_day") == today:
-        return dict(ok=False, msg=f"⏳ حضور امروز ثبت شد — {config.CHECKIN[min(6, int(p.get('streak') or 1) - 1)]} MC گرفتی.")
+        return dict(ok=False, msg=f"⏳ حضور امروز ثبت شد — {config.CHECKIN[min(6, int(p.get('streak') or 1) - 1)]} اعتبار گرفتی.")
     st = int(p.get("streak") or 0)
     yest = (db.local_now() - __import__("datetime").timedelta(days=1)).strftime("%Y-%m-%d")
     st = st + 1 if p.get("last_seen_day") == yest else 1
@@ -413,7 +446,7 @@ def checkin(uid: int) -> dict:
     PL.add_res(uid, credits=mc)
     xp = config.CHECKIN_XP
     PL.add_xp(uid, xp)
-    return dict(ok=True, msg=f"📅 <b>DAILY ACCESS LOGGED</b> — روز {st}\n🪙 +{mc} MC · ✨ +{xp} XP")
+    return dict(ok=True, msg=f"📅 <b>ورود روزانه ثبت شد</b> — روز {st}\n🪙 +{mc} اعتبار · ✨ +{xp} تجربه")
 
 
 def refund(uid: int, what: str, amount: float) -> dict:

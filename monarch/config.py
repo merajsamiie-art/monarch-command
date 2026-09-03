@@ -47,8 +47,8 @@ GROUP_URL = os.getenv("GROUP_URL", "https://t.me/+BdlZ6aF4ai8xZjNk")
 REQUIRE_CHANNEL = os.getenv("REQUIRE_CHANNEL", "1") == "1"   # گیت عضویت کانال
 MEMBERSHIP_CACHE = 900                                       # کش عضویت ۱۵ دقیقه
 
-BRAND = "MONARCH COMMAND"
-TAGLINE = "🦖☢️ MONARCH COMMAND — The Titans Are Already Here."
+BRAND = "فرماندهی مانارچ"
+TAGLINE = "🦖☢️ فرماندهی مانارچ — تایتان‌ها از قبل اینجا بودند."
 BOT_USER = "MonarchCommandBot"
 PREFIX = "مانارچ"          # پیشوند دستورات متنی فارسی («مانارچ من»)
 

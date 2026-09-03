@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import random
+import re
 import time
 
 from aiogram import Bot, F, Router
@@ -123,7 +124,7 @@ def name_of(m: Message) -> str:
 def chat_of(m: Message) -> dict:
     cid = m.chat.id
     kind = "group" if str(cid).startswith("-100") or m.chat.type in ("group", "supergroup") else "private"
-    events.ensure_chat(cid, m.chat.title or "PRIVATE", kind)
+    events.ensure_chat(cid, m.chat.title or "خصوصی", kind)
     row = db.db().one("SELECT * FROM chats WHERE chat_id=?", (int(cid),)) or {}
     row["chat_id"] = int(cid)
     return row
@@ -186,8 +187,8 @@ async def gate(m: Message, admin_ok: bool = True) -> bool:
         t = now()
         if t - float(_SPAM_WARN.get(uid) or 0) > 60:
             _SPAM_WARN[uid] = t
-            await reply(m, f"⏳ <b>RATE LIMIT</b> — {wait:.0f} ثانیه صبر کن؛ "
-                           f"MONARCH از اسپم خوشش نمی‌آید.")
+            await reply(m, f"⏳ <b>سقف مجاز</b> — {wait:.0f} ثانیه صبر کن؛ "
+                           f"مانارچ از اسپم خوشش نمی‌آید.")
         return False
     if config.REQUIRE_CHANNEL and not await member_ok(m.bot, uid):
         await reply(m, texts.NO_CLEARANCE.format(channel=config.CHANNEL_URL),
@@ -208,7 +209,7 @@ async def cmd_start(m: Message, command: CommandObject = None):
         await reply(m, texts.NO_CLEARANCE.format(channel=config.CHANNEL_URL),
                     kb.kb([[(config.CHANNEL_URL, "📢 عضویت در کانال")]]))
         return
-    ref = (command.args or "").strip()
+    ref = _args(command).strip()
     p = PL.get(uid)
     fresh = now() - float(p.get("created_at") or 0) < 20
     if ref.startswith("ref:") and fresh:
@@ -218,13 +219,13 @@ async def cmd_start(m: Message, command: CommandObject = None):
                 PL.add_res(inv, credits=300, fdata=1)
                 PL.add_res(uid, credits=150)
                 PL.add_xp(inv, 8)
-                await reply(m, f"🤝 <b>RECRUIT LINKED</b> — {PL.name_of(inv)} تو را معرفی کرد؛ "
-                               f"🪙 +۱۵۰ MC · 📡 +۱ داده")
+                await reply(m, f"🤝 <b>تازه‌وارث پیوست شد</b> — {PL.name_of(inv)} تو را معرفی کرد؛ "
+                               f"🪙 +۱۵۰ اعتبار · 📡 +۱ داده")
         except (ValueError, IndexError):
             pass
     if not fresh:
         act = combat.active_of(uid)
-        await reply(m, f"🛰 <b>WELCOME BACK</b> — {p['name']}\n"
+        await reply(m, f"🛰 <b>بازگشت خوش‌آمد</b> — {p['name']}\n"
                        f"🎖 {PL.rank_label(p)} · ❤️ {ui.n(p['hp'])}/{ui.n(p['max_hp'])} · "
                        f"🔋 {ui.n(p['energy'])}\n"
                        + (f"⚔️ درگیری فعال داری: <code>/fight</code>" if act else "✅ وضعیت پایدار"),
@@ -247,7 +248,7 @@ async def cmd_rules(m: Message):
 
 
 async def cmd_join(m: Message):
-    await reply(m, f"👥 <b>MONARCH OPS GROUP</b>\n{config.GROUP_URL}\n\n"
+    await reply(m, f"👥 <b>گروه عملیات مانارچ</b>\n{config.GROUP_URL}\n\n"
                    f"📢 <b>کانال آموزشی</b>\n{config.CHANNEL_URL}")
 
 
@@ -283,37 +284,38 @@ async def cmd_me(m: Message):
 async def cmd_clearance(m: Message):
     p = guard(m)
     rank = int(p.get("rank") or 1)
-    lines = [f"🎖 <b>CLEARANCE FILE</b> — {p['name']}",
-             f"رتبه‌ی فعلی: <b>{PL.rank_label(p)}</b> <code>(Rank {rank})</code>",
+    lines = [f"🎖 <b>پرونده دسترسی</b> — {p['name']}",
+             f"رتبۀ فعلی: <b>{PL.rank_label(p)}</b> <code>(سطح {rank})</code>",
              f"✨ {ui.bar(float(p.get('xp') or 0), balance.xp_need(rank), 14)} "
-             f"<i>{ui.n(p.get('xp'))}/{ui.n(balance.xp_need(rank))} XP</i>", "", "🪜 <b>نردبان دسترسی</b>"]
+             f"<i>{ui.n(p.get('xp'))}/{ui.n(balance.xp_need(rank))} تجربه</i>", "", "🪜 <b>نردبان دسترسی</b>"]
     for k, r in balance.RANKS.items():
         done = "✅" if rank >= r["need"] else "🔒"
-        lines.append(f"{done} {r['emj']} {r['name']} — رنک <code>{r['need']}</code>")
+        lines.append(f"{done} {r['emj']} {r['name']} — رتبۀ <code>{r['need']}</code>")
     lines += ["", "🔓 <b>دروازه‌ی کشف تایتان</b>"]
     for rar, g in balance.GATE.items():
-        lines.append(f"▪️ {rar:<10} رنک {g['rank']} · 🧬{g['dna']} · 💎{g['cores']} · 📡{g['fdata']} · ⚔️{g['kills']} kill")
+        lines.append(f"▪️ <b>{(TN.RARITY.get(rar) or {}).get('name') or rar}</b> · رتبۀ {g['rank']} · "
+             f"🧬{ui.n(g['dna'])} · 💎{ui.n(g['cores'])} · 📡{ui.n(g['fdata'])} · ⚔️{ui.n(g['kills'])} شکار")
     await reply(m, "\n".join(lines))
 
 
 @router.message(Command("top"))
 async def cmd_top(m: Message, command: CommandObject = None):
     guard(m)
-    mode = (command.args or "power").split()[0]
+    mode = (_args(command) or "power").split()[0]
     rows = PL.leaderboard(mode, 12)
-    ttl = dict(power="🏆 قدرت رزمی", xp="✨ تجربه", boss="🕹 باس‌کُش", raid="🌍 رید",
+    ttl = dict(power="🏆 قدرتِ رزمی", xp="✨ تجربه", boss="🕹 باس‌کُش", raid="🌍 یورش",
                kills="⚔️ شکار", arena="🏆 آرنا", research="🔬 پژوهش", deaths="☠️ مرگ").get(mode, "🏆")
-    lines = [f"{ttl} <b>· MONARCH RANKING</b>", ui.divider()]
+    lines = [f"{ttl} <b>· رتبه‌بندی مانارچ</b>", ui.divider()]
     med = ["🥇", "🥈", "🥉"]
     for i, r in enumerate(rows, 1):
         v = ui.n(r.get("v")) if mode != "power" else ui.n(r.get("v"))
         lines.append(f"{med[i-1] if i <= 3 else f'{i}.'} <b>{(r.get('name') or '')[:18]}</b> · "
-                     f"<code>R{r.get('rank')}</code> · <b>{v}</b>")
+                     f"<code>رتبه {r.get('rank')}</code> · <b>{v}</b>")
     if not rows:
         lines.append("<i>هیچ پرونده‌ای ثبت نشده — اولین باش.</i>")
     dts = division.top(5)
     if dts and mode in ("power", "boss"):
-        lines += ["", "🏢 <b>DIVISIONS</b>"]
+        lines += ["", "🏢 <b>سازمان‌ها</b>"]
         for i, d in enumerate(dts, 1):
             lines.append(f"{i}. {d['name']} <code>[{d['tag']}]</code> L{d['level']} · "
                          f"🪙{ui.n(d['credits'])} · {int(d['wins'])}W")
@@ -326,9 +328,9 @@ async def cmd_top(m: Message, command: CommandObject = None):
 async def cb_top(c: CallbackQuery):
     mode = c.data.split(":")[1]
     rows = PL.leaderboard(mode, 12)
-    lines = [f"🏆 <b>MONARCH RANKING</b> · {mode}", ui.divider()]
+    lines = [f"🏆 <b>رنکینگ مانارچ</b> · {mode}", ui.divider()]
     for i, r in enumerate(rows, 1):
-        lines.append(f"{i}. <b>{(r.get('name') or '')[:18]}</b> · <code>R{r.get('rank')}</code> · {ui.n(r.get('v'))}")
+        lines.append(f"{i}. <b>{(r.get('name') or '')[:18]}</b> · <code>رتبه {r.get('rank')}</code> · {ui.n(r.get('v'))}")
     try:
         await c.message.edit_text("\n".join(lines),
                                   reply_markup=kb.list_menu([(k, k) for k in
@@ -350,7 +352,7 @@ def codex_text(uid: int, page: int = 0) -> str:
     roster = sorted(TN.TITANS.values(), key=lambda t: (-balance.titans_rarity_idx(t["rar"]), t["name"]))
     per = 12
     chunk = roster[page * per:(page + 1) * per]
-    lines = [f"📁 <b>MONARCH DATABASE</b> · <code>{len(TN.TITANS)} پرونده</code>",
+    lines = [f"📁 <b>پرونده‌های مانارچ</b> · <code>{len(TN.TITANS)} پرونده</code>",
              f"صفحه {page+1}/{max(1, -(-len(roster)//per))} · کشف‌شده توسط تو: "
              f"<b>{len(research.known_rows(uid))}</b>", ui.divider()]
     for t in chunk:
@@ -362,8 +364,8 @@ def codex_text(uid: int, page: int = 0) -> str:
             lines.append(f"{t['emj']} <code>{t['id'][:12]}</code> — <b>{t['name']}</b>\n"
                          f"     {flag} · {ui.threat_stars(t['threat'])}")
         else:
-            lines.append(f"🕳 <code>UNKNOWN-{abs(hash(t['id'])) % 900 + 100}</code> — "
-                         f"<b>UNKNOWN TITAN</b>\n     <i>STATUS: CLASSIFIED</i>")
+            lines.append(f"🕳 <code>ناشناخته-{abs(hash(t['id'])) % 900 + 100}</code> — "
+                         f"<b>تایتان ناشناخته</b>\n     <i>وضعیت: محرمانه</i>")
     lines += ["", "<i>📡 /track برای بازکردن پرونده‌ها · /dossier &lt;id&gt; برای جزییات</i>"]
     return "\n".join(lines)
 
@@ -371,7 +373,7 @@ def codex_text(uid: int, page: int = 0) -> str:
 def codex_kb(uid: int, page: int = 0):
     roster = sorted(TN.TITANS.values(), key=lambda t: (-balance.titans_rarity_idx(t["rar"]), t["name"]))
     per = 12
-    items = [(t["id"], t["name"] if research.is_known(uid, t["id"]) else f"UNKNOWN {abs(hash(t['id'])) % 900 + 100}")
+    items = [(t["id"], t["name"] if research.is_known(uid, t["id"]) else f"ناشناخته {abs(hash(t['id'])) % 900 + 100}")
              for t in roster[page * per:(page + 1) * per]]
     rows = [[(f"dx:{tid}:{page}", nm[:22]) for tid, nm in items[i:i + 2]] for i in range(0, len(items), 2)]
     nav = []
@@ -416,7 +418,7 @@ async def cb_dossier(c: CallbackQuery):
 @router.message(Command("dossier"))
 async def cmd_dossier(m: Message, command: CommandObject = None):
     guard(m)
-    arg = (command.args or "").strip()
+    arg = _args(command).strip()
     if not arg:
         await reply(m, texts.TITAN_CLASSIFIED, kb.kb([[("menu:codex", "📁 دیتابیس")]]))
         return
@@ -444,7 +446,7 @@ async def cmd_track(m: Message):
     await reply(m, r.get("msg", "❔"))
     if r.get("ok") and r.get("advanced"):
         t = TN.get(r["tid"]) or {}
-        await reply(m, f"🚨 <b>FILE OPENED</b> — {t.get('name', 'UNKNOWN')}\n"
+        await reply(m, f"🚨 <b>پرونده باز شد</b> — {t.get('name', 'ناشناخته')}\n"
                        f"«/dossier {t.get('id')}» برای پرونده · «/sample {t.get('id')}» برای نمونه")
 
 
@@ -453,14 +455,14 @@ async def cmd_sample(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    tid = resolve_tid(command.args)
+    tid = resolve_tid(_args(command))
     if not tid:
         await reply(m, "🧬 نمونه‌برداری روی چه چیزی؟ <code>/sample anguirus</code>\n"
                        "آخرین هدف: " + str(db.db().getv(f"lasttarget:{m.from_user.id}", "—")))
         return
     r = research.sample(m.from_user.id, tid, chat_of(m))
     await reply(m, r.get("msg", "❔"))
-    if "AGENT DOWN" in (r.get("msg") or ""):
+    if "عامل از پا درآمده" in (r.get("msg") or ""):
         PL.die(m.from_user.id, "SAMPLING")
 
 
@@ -469,7 +471,7 @@ async def cmd_analyze(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    tid = resolve_tid(command.args)
+    tid = resolve_tid(_args(command))
     if not tid:
         await reply(m, "🔬 هدف مشخص نیست — <code>/analyze &lt;titan&gt;</code>")
         return
@@ -498,7 +500,7 @@ async def cmd_bond(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    args = (command.args or "").strip().split()
+    args = _args(command).strip().split()
     if args and args[0].lower() in ("up", "ارتقا"):
         tid = resolve_tid(" ".join(args[1:]))
         if not tid:
@@ -529,6 +531,11 @@ async def cb_bond(c: CallbackQuery):
     await c.answer((r.get("msg") or "❔")[:180].replace("<b>", "").replace("</b>", ""), show_alert=True)
 
 
+def _args(command) -> str:
+    """آرگومانِ دستور — حتی وقتی هندلر از دکمه (بدونِ CommandObject) صدا زده می‌شود."""
+    return str(getattr(command, "args", None) or "").strip()
+
+
 def resolve_tid(args) -> str:
     a = (args or "").strip().lower()
     if not a:
@@ -552,7 +559,7 @@ async def cmd_puzzle(m: Message):
         await reply(m, r.get("msg", "❔"))
         return
     rows = [[(f"pz:{oid}", nm[:20])] for nm, oid in zip(r["opts"], r["ids"])]
-    await reply(m, f"🧮 <b>MONARCH CIPHER</b>\n\n{r['q']}\n\n<i>پاسخ درست → +{config.PUZZLE_POINTS} امتیاز تحقیق</i>",
+    await reply(m, f"🧮 <b>رمزنگار مانارچ</b>\n\n{r['q']}\n\n<i>پاسخ درست → +{config.PUZZLE_POINTS} امتیاز تحقیق</i>",
                 kb.kb(rows))
 
 
@@ -573,11 +580,11 @@ async def cmd_hunt(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    tid = resolve_tid(command.args)
+    tid = resolve_tid(_args(command))
     if not tid:
         rows = sorted(TN.TITANS.values(), key=lambda t: t["power"])[:10]
         items = [(t["id"], f"{t['emj']} {t['name']}") for t in rows]
-        await reply(m, "⚔️ <b>HUNT CONSOLE</b>\nیک هدف انتخاب کن (یا <code>/hunt &lt;id&gt;</code>).\n"
+        await reply(m, "⚔️ <b>کنسول شکار</b>\nیک هدف انتخاب کن (یا <code>/hunt &lt;id&gt;</code>).\n"
                        "<i>تایتان‌های بالاتر از رتبه‌ی تو قفل‌اند.</i>",
                     kb.list_menu(items, "hunt", per_row=2))
         return
@@ -691,7 +698,7 @@ async def cmd_boss(m: Message):
     if not a:
         res = bosses.spawn(chat["chat_id"], force=True)
         if not res.get("ok"):
-            await reply(m, "🕹 MONARCH در این بخش تهدید فعالی ثبت نکرده — <code>/scan</code> را ببین.")
+            await reply(m, "🕹 مانارچ در این بخش تهدید فعالی ثبت نکرده — <code>/scan</code> را ببین.")
             return
         await reply(m, res["text"])
         return
@@ -708,7 +715,7 @@ async def cmd_scan(m: Message):
     chat = chat_of(m)
     a = bosses.active(chat["chat_id"])
     zone = chat.get("zone") or "ocean"
-    lines = [f"📡 <b>SECTOR SCAN</b> · {TN.ENVS.get(zone, zone)}",
+    lines = [f"📡 <b>اسکن منطقه</b> · {TN.ENVS.get(zone, zone)}",
              f"🌡 خطر: {ui.bar(int(chat.get('danger') or 1), 5, 5)} <code>{chat.get('danger', 1)}/5</code>",
              f"👥 عاملان فعال ۲۴ ساعت اخیر: <b>{db.db().one('SELECT COUNT(*) c FROM chat_users WHERE chat_id=? AND last_active>?', (chat['chat_id'], now()-86400))['c']}</b>"]
     if a:
@@ -724,7 +731,7 @@ async def cmd_scan(m: Message):
         pool = bosses.eligible(zone)
         lines += ["", "<i>هیچ تهدید فعالی ثبت نشده.</i>",
                   f"📶 امضاهای شناسایی‌شده در این بخش: <b>{len(pool)}</b>",
-                  "<i>MONARCH هر چند دقیقه یک‌بار زلزله را اسکن می‌کند.</i>"]
+                  "<i>مانارچ هر چند دقیقه یک‌بار زلزله را اسکن می‌کند.</i>"]
     await reply(m, "\n".join(lines))
 
 
@@ -732,7 +739,7 @@ async def cmd_scan(m: Message):
 @router.message(Command("raid"))
 async def cmd_raid(m: Message, command: CommandObject = None):
     guard(m)
-    args = (command.args or "").strip().lower()
+    args = _args(command).strip().lower()
     if args.startswith("join"):
         r = RA.join(m.from_user.id)
         await reply(m, r.get("msg", r.get("ok") and "✅" or "❔"))
@@ -774,7 +781,7 @@ async def cmd_explore(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    args = (command.args or "").strip().lower()
+    args = _args(command).strip().lower()
     if args.startswith("claim"):
         r = expedition.claim(m.from_user.id, chat_of(m))
         await reply(m, r.get("msg", "❔"))
@@ -793,14 +800,14 @@ async def cmd_explore(m: Message, command: CommandObject = None):
             await reply(m, "🗺 کاوش فعالی نداری.")
             return
         z = expedition.ZONES.get(st["zone"], {})
-        await reply(m, f"🗺 <b>ACTIVE EXPEDITION</b>\n{z.get('name', st['zone'])} · سطح {st['tier']}\n"
+        await reply(m, f"🗺 <b>کاوش فعال</b>\n{z.get('name', st['zone'])} · سطح {st['tier']}\n"
                        + (f"⏱ {ui.dur(st['left'])} تا بازگشت" if st.get("active") else "✅ آماده‌ی تحویل: /explore claim"),
                     kb.kb([[("menu:explore", "🗺 انتخاب منطقه")]]))
         return
     p = PL.get(m.from_user.id)
     items = [(k, f"{z['name'].split(' ', 1)[0]} {z['name'].split(' ', 1)[-1][:14]} · {z['mins'][0]}m")
              for k, z in expedition.available(p)]
-    await reply(m, "🗺 <b>EXPEDITION CONSOLE</b>\nمنطقه را انتخاب کن؛ تیم ۹ تا ۴۰ دقیقه درگیر است.\n"
+    await reply(m, "🗺 <b>کنسول کاوش</b>\nمنطقه را انتخاب کن؛ تیم ۹ تا ۴۰ دقیقه درگیر است.\n"
                   "<i>بعضی کاوش‌ها برنمی‌گردند. بعضی گنج پیدا می‌کنند.</i>",
                 kb.list_menu(items, "exp", per_row=1, back="menu:main"))
 
@@ -849,8 +856,8 @@ async def cmd_duel(m: Message, command: CommandObject = None):
     target = None
     if m.reply_to_message and m.reply_to_message.from_user:
         target = m.reply_to_message.from_user.id
-    elif command and command.args:
-        txt = command.args
+    elif _args(command):
+        txt = _args(command)
         digits = "".join(ch for ch in txt if ch.isdigit())
         if digits:
             target = int(digits)
@@ -871,16 +878,19 @@ async def cmd_shop(m: Message, command: CommandObject = None):
 def shop_text(uid: int, kind: str = None) -> str:
     p = PL.get(uid) or {}
     inv_ = PL.inv(uid)
-    lines = [f"🪙 <b>MONARCH QUARTERMASTER</b> · 🪙 {ui.n(p.get('credits'))} MC",
+    n = 0
+    lines = [f"🪙 <b>تأمینات مانارچ</b> · 🪙 {ui.n(p.get('credits'))} اعتبار",
              "<i>هیچ آیتم پولی قدرت نمی‌فروشد — همه‌چیز با بازی باز می‌شود.</i>", ui.divider()]
     for iid, it in economy.catalog(kind):
         if it.get("kind") == "material":
             continue
         have = int((inv_.get(iid) or {}).get("qty") or 0)
         lock = "🔒" if int(p.get("rank") or 1) < it.get("need_rank", 1) else ("✅" if have else "▫️")
-        mods = " ".join(f"{k}+{v}" for k, v in (it.get("mods") or {}).items())
-        lines.append(f"{lock} <code>{iid}</code> — <b>{it['name']}</b> ×{have}\n"
-                     f"     🪙{int(it['cost']):,} · R{it.get('need_rank', 1)} · <i>{mods or it.get('desc', '')[:40]}</i>")
+        mods = economy.mod_text(it)
+        n += 1
+        lines.append(f"{lock} <code>{n}.</code> {it['emj'] if it.get('emj') else ''} <b>{it['name']}</b> ×{have}\n"
+                     f"     🪙{int(it['cost']):,} · رتبه {it.get('need_rank', 1)}"
+                     + (f" · <i>{mods}</i>" if mods else (f" · <i>{it.get('desc', '')[:44]}</i>" if it.get('desc') else "")))
     return "\n".join(lines)
 
 
@@ -927,14 +937,14 @@ async def cmd_inv(m: Message):
     guard(m)
     uid = m.from_user.id
     inv_ = PL.inv(uid)
-    lines = [f"🎒 <b>FIELD LOCKER</b> — {PL.name_of(uid)}", ui.divider()]
+    lines = [f"🎒 <b>کمد میدانی</b> — {PL.name_of(uid)}", ui.divider()]
     if not inv_:
         lines.append("<i>خالی. /shop را ببین.</i>")
     for iid, row in inv_.items():
         it = economy.ITEMS.get(iid) or {}
         lvl = PL.item_level(uid, iid)
-        lines.append(f"{'⚙️' if row['equipped'] else '▫️'} <code>{iid}</code> ×{row['qty']} — {it.get('name', iid)}"
-                     + (f" <code>MK+{lvl}</code>" if lvl else ""))
+        lines.append(f"{'⚙️' if row['equipped'] else '▫️'} {it.get('emj', '🎒')} <b>{it.get('name', iid)}</b>"
+                     f" ×{row['qty']}" + (f" · <code>سطح +{lvl}</code>" if lvl else ""))
         if it.get("kind") == "consumable":
             lines.append(f"     <i>{it.get('desc', '')}</i>")
     p = PL.get(uid)
@@ -953,12 +963,39 @@ async def cb_equip(c: CallbackQuery):
     await c.answer((r.get("msg") or "")[:180].replace("<b>", "").replace("</b>", ""), show_alert=True)
 
 
+def item_ref(uid: int, args: str) -> str:
+    """«۲»، «تبرِ دودکش» یا `wp_axe` → شناسهٔ آیتم. شماره‌ها همان ردیف‌های /shop و /inv هستند."""
+    a = (args or "").strip().strip("«»")
+    if not a:
+        return ""
+    if a in economy.ITEMS:
+        return a
+    digits = "".join(ch for ch in a if ch.isdigit())
+    inv_ = list((PL.inv(uid) or {}).keys())
+    pool = inv_ or [k for k, v in economy.ITEMS.items() if v.get("kind") != "material"]
+    if digits and str(int(digits)) in ("".join(ch for ch in a if ch.isdigit()),):
+        try:
+            i = int(digits) - 1
+            if 0 <= i < len(pool):
+                return pool[i]
+        except ValueError:
+            pass
+    norm = lambda s: re.sub(r"[\u200c\s]+", "", str(s or "")).lower()
+    want = norm(a)
+    for iid in pool:
+        it = economy.ITEMS.get(iid) or {}
+        nm = norm(it.get("name"))
+        if want and (nm == want or nm.startswith(want) or want in nm):
+            return iid
+    return a if a in economy.ITEMS else ""
+
+
 @router.message(Command("equip"))
 async def cmd_equip(m: Message, command: CommandObject = None):
     guard(m)
-    iid = (command.args or "").strip().split()[-1] if command and command.args else ""
+    iid = item_ref(m.from_user.id, _args(command))
     if not iid:
-        await reply(m, "⚙️ <code>/equip &lt;item_id&gt;</code> — لیست: /inv")
+        await reply(m, "⚙️ <code>/equip &lt;نام یا شماره&gt;</code> — لیست: /inv")
         return
     r = PL.equip(m.from_user.id, iid)
     await reply(m, r.get("msg", "❔"))
@@ -967,8 +1004,8 @@ async def cmd_equip(m: Message, command: CommandObject = None):
 @router.message(Command("use"))
 async def cmd_use(m: Message, command: CommandObject = None):
     guard(m)
-    iid = (command.args or "").strip().split()[-1] if command and command.args else ""
-    r = PL.use_item(m.from_user.id, iid) if iid else dict(ok=False, msg="🎒 <code>/use cs_stim</code>")
+    iid = item_ref(m.from_user.id, _args(command))
+    r = PL.use_item(m.from_user.id, iid) if iid else dict(ok=False, msg="🎒 <code>/use &lt;نام یا شماره&gt;</code>")
     await reply(m, r.get("msg", "❔"))
 
 
@@ -977,9 +1014,9 @@ async def cmd_upgrade(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    iid = (command.args or "").strip().split()[-1] if command and command.args else ""
+    iid = item_ref(m.from_user.id, _args(command))
     if not iid:
-        await reply(m, "⚙️ <code>/upgrade &lt;item_id&gt;</code> · هر سطح +۱۲٪ مودها")
+        await reply(m, "⚙️ <code>/upgrade &lt;نام یا شماره&gt;</code> · هر سطح +۱۲٪ به مودها")
         return
     r = economy.upgrade(m.from_user.id, iid)
     await reply(m, r.get("msg", "❔"))
@@ -989,24 +1026,26 @@ async def cmd_upgrade(m: Message, command: CommandObject = None):
 async def cmd_market(m: Message):
     guard(m)
     p = PL.get(m.from_user.id)
-    lines = [f"🏷 <b>MONARCH EXCHANGE</b> · <code>tick {int(now() // 600) % 144}</code>",
-             f"🪙 موجودی تو: <b>{ui.n(p.get('credits'))} MC</b>", ui.divider(), economy.market_board(),
-             "", "<i>هر ۱۰ دقیقه یک‌بار قیمت جابه‌جا می‌شود؛ Titan Core و MC قابل‌فروش نیستند.</i>",
-             "▸ <code>/sell dna 5</code>"]
+    lines = [f"🏷 <b>صرافی مانارچ</b> · <code>هر ۱۰ دقیقه</code>",
+             f"🪙 موجودی تو: <b>{ui.n(p.get('credits'))} اعتبار</b>", ui.divider(), economy.market_board(),
+             "", "<i>هر ۱۰ دقیقه یک‌بار قیمت جابه‌جا می‌شود؛ هستۀ تایتان و اعتبار قابلِ فروش نیستند.</i>",
+             "▸ <code>/sell ژن 5</code>"]
     await reply(m, "\n".join(lines))
 
 
 @router.message(Command("sell"))
 async def cmd_sell(m: Message, command: CommandObject = None):
     guard(m)
-    parts = (command.args or "").split()
+    parts = _args(command).split()
     if len(parts) < 2:
-        await reply(m, "🏷 <code>/sell &lt;res&gt; &lt;qty&gt;</code> · res: dna|cells|mats|fdata")
+        await reply(m, "🏷 <code>/sell &lt;منبع&gt; &lt;تعداد&gt;</code> · منبع: ژن · پیل · ماده · داده")
         return
     key = parts[0].lower()
-    alias = {"dna": "dna", "🧬": "dna", "cells": "cells", "🔋": "cells", "cell": "cells",
-             "mats": "mats", "material": "mats", "🔩": "mats", "data": "fdata", "fdata": "fdata",
-             "📡": "fdata", "credits": "credits", "🪙": "credits"}.get(key, key)
+    alias = {"dna": "dna", "🧬": "dna", "ژن": "dna", "قطعه": "dna", "frag": "dna",
+             "cells": "cells", "🔋": "cells", "cell": "cells", "پیل": "cells", "سلول": "cells",
+             "mats": "mats", "material": "mats", "🔩": "mats", "ماده": "mats",
+             "data": "fdata", "fdata": "fdata", "📡": "fdata", "داده": "fdata",
+             "credits": "credits", "🪙": "credits", "اعتبار": "credits"}.get(key, key)
     try:
         qty = float("".join(ch for ch in parts[1] if ch.isdigit() or ch == "."))
     except ValueError:
@@ -1020,7 +1059,7 @@ async def cmd_bounty(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    parts = (command.args or "").split()
+    parts = _args(command).split()
     tgt = None
     amt = 0
     if m.reply_to_message and m.reply_to_message.from_user:
@@ -1042,9 +1081,9 @@ async def cmd_bounty(m: Message, command: CommandObject = None):
 async def cmd_vault(m: Message, command: CommandObject = None):
     guard(m)
     p = PL.get(m.from_user.id)
-    parts = (command.args or "").split()
+    parts = _args(command).split()
     if not parts:
-        await reply(m, f"🏦 <b>VAULT</b>\n🪙 داخل خزنه: <b>{ui.n(p.get('vault'))}</b> / {ui.n(PL.vault_capacity(p))}\n"
+        await reply(m, f"🏦 <b>خزانه</b>\n🪙 داخل خزنه: <b>{ui.n(p.get('vault'))}</b> / {ui.n(PL.vault_capacity(p))}\n"
                        f"<i>منابع داخل خزنه هنگام مرگ Drop نمی‌شوند.</i>\n"
                        f"▸ <code>/vault 500</code> · <code>/vault out 500</code>",
                     kb.kb([[("vt:1000", "🪙 ۱۰۰۰"), ("vt:5000", "🪙 ۵۰۰۰"), ("vt:out", "↩️ برداشت")]]))
@@ -1074,7 +1113,7 @@ async def cmd_missions(m: Message):
     st = db.jload(p.get("missions"), {}) or {}
     claims = [(mid, f"🎁 {economy.MISSIONS[mid]['name'][:20]}") for mid, r in st.items()
               if r.get("done") and not r.get("got")]
-    lines = [f"📅 <b>DAILY OPS</b> · {db.local_day()}",
+    lines = [f"📅 <b>عملیات روزانه</b> · {db.local_day()}",
              f"🔥 استریک حضور: <b>{int(p.get('streak') or 0)}</b> · 🎫 چک‌این امروز: "
              f"{'✅' if p.get('last_seen_day') == db.local_day() else '⬜'}", ui.divider(),
              economy.mission_board(m.from_user.id), "",
@@ -1117,7 +1156,7 @@ async def cmd_div(m: Message, command: CommandObject = None):
     if not await gate(m):
         return
     guard(m)
-    parts = (command.args or "").split()
+    parts = _args(command).split()
     if not parts:
         await reply(m, division.card(m.from_user.id),
                     kb.kb([[("dv:fac", "⚙️ تسهیلات"), ("dv:top", "🏆 برترین‌ها")],
@@ -1152,7 +1191,7 @@ async def cmd_div(m: Message, command: CommandObject = None):
             r = division.deploy(m.from_user.id, dict(zip(division.LANES, nums)))
     elif key in ("top",):
         rows = division.top(10)
-        r = dict(ok=True, msg="🏢 <b>DIVISION REGISTRY</b>\n" + "\n".join(
+        r = dict(ok=True, msg="🏢 <b>دفتر سازمان‌ها</b>\n" + "\n".join(
             f"{i}. <b>{d['name']}</b> <code>[{d['tag']}]</code> · L{d['level']} · "
             f"🪙{ui.n(d['credits'])} · {int(d['wins'])}W" for i, d in enumerate(rows, 1)))
     else:
@@ -1168,12 +1207,12 @@ async def cb_div(c: CallbackQuery):
         rows = [[(f"fac:{k}", f"{m['name']} · L{division.facility_of(c.from_user.id, k)}")]
                 for k, m in division.FACILITIES.items()]
         try:
-            await c.message.edit_text('⚙️ <b>FACILITIES</b> — هزینه از خزانه\u200cی Division\n<i>هر سطح با /div fac &lt;key&gt; ساخته می\u200cشود.</i>', reply_markup=kb.kb(rows + [[('menu:main', '🛰 منو')]]))
+            await c.message.edit_text('⚙️ <b>تسهیلات</b> — هزینه از خزانه\u200cی سازمان\n<i>هر سطح با /div fac &lt;key&gt; ساخته می\u200cشود.</i>', reply_markup=kb.kb(rows + [[('menu:main', '🛰 منو')]]))
         except TelegramBadRequest:
             pass
     elif key == "top":
         rows = division.top(10)
-        txt = "🏢 <b>DIVISION REGISTRY</b>\n" + "\n".join(
+        txt = "🏢 <b>دفتر سازمان‌ها</b>\n" + "\n".join(
             f"{i}. <b>{d['name']}</b> L{d['level']} · 🪙{ui.n(d['credits'])}" for i, d in enumerate(rows, 1))
         try:
             await c.message.edit_text(txt)
@@ -1181,10 +1220,10 @@ async def cb_div(c: CallbackQuery):
             pass
     elif key == "war":
         w = division.war_open()
-        txt = ("⚔️ <b>DIVISION WAR</b>\n" +
+        txt = ("⚔️ <b>جنگ سازمان‌ها</b>\n" +
                (f"جنگ فعال است · {ui.dur(w['left'])} تا تسویه\n"
                 f"تخصیص: <code>/div war 40 35 25</code> (Assault/Defense/Intel)"
-                if w.get("active") else "جنگی فعال نیست.\nپنجشنبه ۲۰:۰۰ تهران —_pairs بر اساس XP._"))
+                if w.get("active") else "جنگی فعال نیست.\n<i>پنجشنبۀ هر هفته ساعت ۲۰:۰۰ — جفت‌ها بر پایۀ تجربۀ سازمان ساخته می‌شوند.</i>"))
         try:
             await c.message.edit_text(txt)
         except TelegramBadRequest:
@@ -1210,7 +1249,7 @@ async def cb_menu(c: CallbackQuery):
     act = combat.active_of(uid)
     if key == "main":
         try:
-            await c.message.edit_text(f"🛰 <b>MONARCH COMMAND</b> — {p.get('name')}\n🎖 {PL.rank_label(p)} · ❤️ {ui.n(p['hp'])}/{ui.n(p['max_hp'])} · 🔋 {ui.n(p['energy'])} · 🪙 {ui.n(p['credits'])} MC\n📊 Power <b>{PL.power_rating(p):,}</b> · 🔬 پرونده\u200cهای باز <b>{len(research.known_rows(uid))}</b>", reply_markup=kb.main_menu(p, has_combat=bool(act)))
+            await c.message.edit_text(f"🛰 <b>فرماندهی مانارچ</b> — {p.get('name')}\n🎖 {PL.rank_label(p)} · ❤️ {ui.n(p['hp'])}/{ui.n(p['max_hp'])} · 🔋 {ui.n(p['energy'])} · 🪙 {ui.n(p['credits'])} اعتبار\n📊 قدرت <b>{ui.n(PL.power_rating(p))}</b> · 🔬 پرونده\u200cهای باز <b>{len(research.known_rows(uid))}</b>", reply_markup=kb.main_menu(p, has_combat=bool(act)))
         except TelegramBadRequest:
             pass
     elif key == "codex":
@@ -1222,9 +1261,9 @@ async def cb_menu(c: CallbackQuery):
         r = research.track(uid, chat_of(c.message), chat_of(c.message).get("zone"))
         await c.answer((r.get("msg") or "")[:190].replace("<b>", "").replace("</b>", ""), show_alert=True)
     elif key == "explore":
-        await cmd_explore(c.message)
+        await cmd_explore(c.message, CommandObject())
     elif key == "boss":
-        await cmd_boss(c.message)
+        await cmd_boss(c.message, CommandObject())
     elif key == "raid":
         await cmd_raid(c.message, CommandObject())
     elif key == "arena":
@@ -1245,8 +1284,8 @@ async def cb_menu(c: CallbackQuery):
 @router.message(Command("ref"))
 async def cmd_ref(m: Message):
     guard(m)
-    await reply(m, f"🤝 <b>RECRUIT PROTOCOL</b>\nلینک تو:\n<code>/start ref:{m.from_user.id}</code>\n"
-                   f"هر عاملِ تازه 🪙۳۰۰ MC و 📡۱ داده به تو می‌دهد.")
+    await reply(m, f"🤝 <b>پروتکل تازه‌وارث</b>\nلینک تو:\n<code>/start ref:{m.from_user.id}</code>\n"
+                   f"هر عاملِ تازه 🪙۳۰۰ اعتبار و 📡۱ داده به تو می‌دهد.")
 
 
 @router.message(Command("report"))
@@ -1257,10 +1296,10 @@ async def cmd_report(m: Message):
     live = d.one("SELECT COUNT(*) c FROM combats WHERE status='live'")["c"]
     divs = d.one("SELECT COUNT(*) c FROM divisions")["c"]
     hour = db.local_now().strftime("%H:%M")
-    await reply(m, f"🛰 <b>SYSTEM REPORT</b>\n"
+    await reply(m, f"🛰 <b>گزارش سیستم</b>\n"
                   f"▪️ بازیکنان: <b>{players}</b>\n"
                   f"▪️ نبردهای فعال: <b>{live}</b>\n"
-                  f"▪️ Division‌ها: <b>{divs}</b>\n"
+                  f"▪️ سازمان‌ها: <b>{divs}</b>\n"
                   f"▪️ ساعت محلی: {hour} تهران")
 
 
@@ -1355,7 +1394,7 @@ async def _burst_notice(event):
     _BURST_WARN[uid] = t
     try:
         if isinstance(event, Message):
-            await event.answer("⏳ <b>RATE LIMIT</b> — MONARCH از اسپم خوشش نمی‌آید؛ "
+            await event.answer("⏳ <b>سقف مجاز</b> — مانارچ از اسپم خوشش نمی‌آید؛ "
                                "چند لحظه صبر کن، جهان همان‌جا می‌ماند.")
         else:
             await event.answer("⏳ کمی آهسته‌تر، فرمانده.")

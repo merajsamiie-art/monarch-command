@@ -14,7 +14,7 @@ COUNTER_KEYS = ("guard", "dodge", "counter", "retreat", "charge")
 BOSSES = {
     # ── NORMAL: عملیات‌های روتین MONARCH ──
     "nest_broodmother": dict(
-        name="🕷 Nest Broodmother", emj="queen", base="kumonga", tier="NORMAL", enc=0.75,
+        name="🕷 ملکه‌ی لانه", emj="queen", base="kumonga", tier="NORMAL", enc=0.75,
         zones=("jungle", "hollow"), mins=30, threat=2,
         lore="لانه‌ی جزیره‌ی جمجمه؛ ۴۰۰ تخم در سه متر مکعب.",
         phases=[dict(at=0.66, name="Hatch — نوزادها بیرون می‌آیند", atk=0.18),
@@ -23,7 +23,7 @@ BOSSES = {
                   dict(name="Egg Burst", counter="guard", mult=1.5, emj="acid")],
         reward=dict(credits=1400, dna=2, mats=2)),
     "ash_stalker": dict(
-        name="🐗 Ash Stalker", emj="horns", base="baragon", tier="NORMAL", enc=0.8,
+        name="🐗 ردیاب خاکستر", emj="horns", base="baragon", tier="NORMAL", enc=0.8,
         zones=("volcano", "city"), mins=28, threat=2,
         lore="نمونه‌ی زخمی که به سطح آمده؛ هر نفسش گوگرد است.",
         phases=[dict(at=0.5, name="Magma Vein Exposure", atk=0.22)],
@@ -31,7 +31,7 @@ BOSSES = {
                   dict(name="Ground Splitter", counter="guard", mult=1.5, emj="heavy")],
         reward=dict(credits=1500, cells=2, mats=2)),
     "tide_reaver": dict(
-        name="🦞 Tide Reaver", emj="ocean", base="ebirah", tier="NORMAL", enc=0.82,
+        name="🦞 غارتگر جزر‌ومد", emj="ocean", base="ebirah", tier="NORMAL", enc=0.82,
         zones=("ocean", "city"), mins=26, threat=2,
         lore="راهبندِ دریایی؛ کشتی‌ها را لانه می‌کند.",
         phases=[dict(at=0.6, name="Rip Current", atk=0.14, df=0.06)],
@@ -40,9 +40,9 @@ BOSSES = {
         reward=dict(credits=1450, cells=2, fdata=1)),
     # ── ELITE: پرونده‌های باز ──
     "prototype_kiryu": dict(
-        name="🤖 Prototype KIRYU", emj="mech", base="mechagodzilla", tier="ELITE", enc=0.95,
+        name="🤖 پیش‌نموک یریو", emj="mech", base="mechagodzilla", tier="ELITE", enc=0.95,
         zones=("city", "nuclear"), mins=40, threat=3,
-        lore="پیش‌نمونه‌ی کنترل‌شده‌ی MONARCH؛ هسته‌اش هنوز ناپایدار است.",
+        lore="پیش‌نمونه‌ی کنترل‌شده‌ی مانارچ؛ هسته‌اش هنوز ناپایدار است.",
         phases=[dict(at=0.7, name="Coolant Breach — حرارت بالا", atk=0.2),
                 dict(at=0.35, name="Locked Target Protocol", atk=0.16, df=0.14)],
         specials=[dict(name="Proton Sweep", counter="dodge", mult=1.9, emj="spark"),
@@ -50,7 +50,7 @@ BOSSES = {
                   dict(name="Target Lock", counter="counter", mult=1.3, emj="track")],
         reward=dict(credits=4200, cells=4, mats=4, cores=1)),
     "siren_phase2": dict(
-        name="🟢 Siren Phase II", emj="hedorah", base="hedorah", tier="ELITE", enc=0.98,
+        name=" آوازِ مرگ — فاز ۲", emj="hedorah", base="hedorah", tier="ELITE", enc=0.98,
         zones=("city", "ocean"), mins=42, threat=4,
         lore="فاز پروازی؛ ابر اسیدی روی شهر ایستاده است.",
         phases=[dict(at=0.66, name="Descent — فرود روی دکل", atk=0.18),
@@ -59,7 +59,7 @@ BOSSES = {
                   dict(name="Corrosive Grip", counter="dodge", mult=1.6, emj="web")],
         reward=dict(credits=4600, mats=5, fdata=2, cores=1)),
     "flying_gigan": dict(
-        name="👽 Cyber Enforcer Gigan", emj="gigan", base="gigan", tier="ELITE", enc=1.0,
+        name="👽 گیگانِ مجرّح سایبر", emj="gigan", base="gigan", tier="ELITE", enc=1.0,
         zones=("city", "space"), mins=38, threat=4,
         lore="فرستاده‌ی تمدن‌های بیگانه؛ برای اعدام پادشاه ساخته شد.",
         phases=[dict(at=0.5, name="Blade Overdrive", atk=0.26)],
@@ -67,7 +67,7 @@ BOSSES = {
                   dict(name="Saw Descent", counter="guard", mult=1.7, emj="blade")],
         reward=dict(credits=5000, cores=1, mats=5, fdata=2)),
     "deep_coil": dict(
-        name="🐍 Deep Coil Manda", emj="manda", base="manda", tier="ELITE", enc=0.94,
+        name="🐍 ماندای پیچ‌دهندهٔ عمق", emj="manda", base="manda", tier="ELITE", enc=0.94,
         zones=("ocean", "city"), mins=36, threat=3,
         lore="مارِ قاره‌ها؛ when it wakes, tide charts are rewritten.",
         phases=[dict(at=0.6, name="Constriction Protocol", atk=0.18)],
@@ -76,7 +76,7 @@ BOSSES = {
         reward=dict(credits=4100, dna=4, cells=3)),
     # ── LEGENDARY ──
     "stormlord": dict(
-        name="🐉 Stormlord Ghidorah", emj="ghidorah", base="king_ghidorah", tier="LEGENDARY",
+        name="🐉 سرور طوفان گیدوره", emj="ghidorah", base="king_ghidorah", tier="LEGENDARY",
         enc=1.15, zones=("city", "space", "ocean"), mins=55, threat=5,
         lore="سه سر، سه تصمیم؛ طوفان فقط اثر جانبی است.",
         phases=[dict(at=0.72, name="Front Alpha — جبهه‌ی طوفان", atk=0.2, env="city"),
@@ -87,7 +87,7 @@ BOSSES = {
                   dict(name="Tail Sweep Chaos", counter="counter", mult=1.5, emj="clash")],
         reward=dict(credits=18000, cores=3, fdata=6, dna=8, cells=6)),
     "floral_nightmare": dict(
-        name="🧬 Floral Nightmare", emj="biollante", base="biollante", tier="LEGENDARY",
+        name="🧬 کابوس گلگون", emj="biollante", base="biollante", tier="LEGENDARY",
         enc=1.08, zones=("jungle", "nuclear"), mins=50, threat=4,
         lore="ترکیب گل و DNA گودزیلا؛ ریشه در خاکِ آلوده دارد.",
         phases=[dict(at=0.6, name="Second Bloom", atk=0.22, heal_pct=0.1),
@@ -96,7 +96,7 @@ BOSSES = {
                   dict(name="Acid Pollen", counter="dodge", mult=1.7, emj="acid")],
         reward=dict(credits=15500, dna=10, cores=2, mats=5)),
     "perfection": dict(
-        name="☠️ Destoroyah: Perfection", emj="destoroyah", base="destoroyah", tier="LEGENDARY",
+        name="☠️ دسترویا: کمال", emj="destoroyah", base="destoroyah", tier="LEGENDARY",
         enc=1.2, zones=("city", "nuclear", "volcano"), mins=58, threat=5,
         lore="پرونده‌ی «مرگ گودزیلا»؛ تکامل در میانه‌ی نبرد.",
         phases=[dict(at=0.75, name="Agonized Swarm", atk=0.2),
@@ -108,7 +108,7 @@ BOSSES = {
         reward=dict(credits=21000, cores=4, fdata=7, dna=9)),
     # ── ALPHA: تهدیدهای سطحِ آخر ──
     "axe_bearer": dict(
-        name="🦍 Kong: Axe Bearer", emj="kong", base="kong", tier="ALPHA", enc=1.12,
+        name="🦍 کونگ: دارندهٔ تبر", emj="kong", base="kong", tier="ALPHA", enc=1.12,
         zones=("hollow", "jungle", "city"), mins=48, threat=4,
         lore="وقتی تبر را برمی‌دارد، دیگر مذاکره‌ای در کار نیست.",
         phases=[dict(at=0.62, name="Charge Resonance", atk=0.2),
@@ -117,7 +117,7 @@ BOSSES = {
                   dict(name="Ground Shock", counter="guard", mult=1.7, emj="clash")],
         reward=dict(credits=12000, cores=2, mats=6, cells=5)),
     "siege_mecha": dict(
-        name="🤖 Mechagodzilla: Siege", emj="mecha", base="mechagodzilla", tier="ALPHA", enc=1.2,
+        name="🤖 مکاگودزیلا: محاصره", emj="mecha", base="mechagodzilla", tier="ALPHA", enc=1.2,
         zones=("city", "space"), mins=56, threat=5,
         lore="سه گانگ، سه حالت؛ حالت محاصره یعنی شهر تخلیه شود.",
         phases=[dict(at=0.7, name="Proton Array Online", atk=0.22),
@@ -128,7 +128,7 @@ BOSSES = {
         reward=dict(credits=24000, cores=4, fdata=8, cells=8)),
     # ── WORLD BOSS (راید جهانی) ──
     "hollow_breach": dict(
-        name="🌒 The Hollow Breach", emj="breach", base="skar_king", tier="WORLD", enc=1.7,
+        name="🌒 شکاف زمینِ توخالی", emj="breach", base="skar_king", tier="WORLD", enc=1.7,
         zones=("hollow", "jungle", "ocean"), mins=180, threat=5, world=True,
         lore="شکافی در پوست زمین؛ از آن بیرون، زنجیرها دیده می‌شوند.",
         phases=[dict(at=0.8, name="Beast Tide — موج موجودات", atk=0.18),
@@ -140,7 +140,7 @@ BOSSES = {
                   dict(name="Domination Roar", counter="counter", mult=1.4, emj="crown")],
         reward=dict(credits=60000, cores=10, fdata=12, dna=14, cells=10)),
     "crystal_tree": dict(
-        name="💎 The Crystal Tree", emj="spacegod", base="spacegodzilla", tier="WORLD", enc=1.65,
+        name="💎 درخت بلور", emj="spacegod", base="spacegodzilla", tier="WORLD", enc=1.65,
         zones=("space", "antarctica", "city"), mins=170, threat=5, world=True,
         lore="ریشه‌های بلورین در یخ جنوبگان؛ هر شاخه یک پایگاه را بلعیده است.",
         phases=[dict(at=0.78, name="Crystal Bloom", atk=0.2),
@@ -151,7 +151,7 @@ BOSSES = {
                   dict(name="Mirror Refraction", counter="counter", mult=1.5, emj="light")],
         reward=dict(credits=55000, cores=9, fdata=14, cells=9)),
     "long_winter": dict(
-        name="❄️ Shimo: The Long Winter", emj="shimo", base="shimo", tier="WORLD", enc=1.6,
+        name="❄️ شیمو: زمستانِ دراز", emj="shimo", base="shimo", tier="WORLD", enc=1.6,
         zones=("antarctica", "ocean", "city"), mins=165, threat=5, world=True,
         lore="هر جا که پا می‌گذارد، عصر یخبندان می‌آید.",
         phases=[dict(at=0.8, name="Frost Quake", atk=0.18),
@@ -162,7 +162,7 @@ BOSSES = {
                   dict(name="Deep Freeze Pulse", counter="charge", mult=1.4, emj="lock")],
         reward=dict(credits=52000, cores=8, cells=12, mats=10)),
     "resonance_chorus": dict(
-        name="🦇 Resonance Chorus", emj="muto", base="muto_prime", tier="WORLD", enc=1.5,
+        name="🦇 همنوایی", emj="muto", base="muto_prime", tier="WORLD", enc=1.5,
         zones=("city", "hollow"), mins=150, threat=4, world=True,
         lore="دو جفت، چهار صدا؛ فرکانسی که استخوان را می‌شکند.",
         phases=[dict(at=0.7, name="Silence Barrage", atk=0.2),
@@ -171,7 +171,7 @@ BOSSES = {
                   dict(name="Brood Rush", counter="guard", mult=1.7, emj="swarm")],
         reward=dict(credits=44000, cores=6, dna=12, fdata=8)),
     "orca_protocol": dict(
-        name="🛰 ORCA Protocol — Rogue", emj="moguera", base="moguera", tier="WORLD", enc=1.42,
+        name="🛰 پروتکل اورکا — سرکش", emj="moguera", base="moguera", tier="WORLD", enc=1.42,
         zones=("nuclear", "city", "space"), mins=150, threat=4, world=True,
         lore="دستگاه ORCA از کنترل خارج شده و خودش «فرمان» می‌دهد.",
         phases=[dict(at=0.66, name="Signal Hijack", atk=0.24),
@@ -230,18 +230,23 @@ def pick(zone: str, danger: int = 1, hour: int = None) -> str:
 
 
 def block_for(bid: str, chat: dict = None, hp: float = None) -> dict:
-    """ساختن بلاک باس از روی تایتانِ پایه + متادیتای فاز/ویژه."""
-    b = by_id(bid)
+    """ساختن بلاک باس از روی تایتانِ پایه + متادیتای فاز/ویژه.
+
+    شناسۀ نامعتبر (تایپِ ادمین، دیتابیسِ اورلیِ ناقص) بازی را نمی‌شکند:
+    یک باسِ «ناشناخته» ساخته می‌شود تا جریانِ نبرد حفظ بماند.
+    """
+    b = by_id(bid) or dict(id=bid or "unknown", name="🕳 باسِ ناشناخته", emj="void", base="godzilla",
+                           tier="ELITE", enc=1.0, zones=["city"], phases=[], specials=[], threat=3)
     t = TN.get(b.get("base")) or TN.get("godzilla")
     danger = int((chat or {}).get("danger") or 1)
     enc = float(b.get("enc", 1.0)) * (0.92 + 0.09 * danger)
     blk = balance.titan_block(t, encounter=enc, rank=int((chat or {}).get("min_rank") or 8))
-    blk["name"] = b["name"]
-    blk["emj"] = b["emj"]
+    blk["name"] = b.get("name") or "باسِ ناشناخته"
+    blk["emj"] = b.get("emj") or "🕳"
     blk["boss_id"] = bid
     blk["is_boss"] = True
-    blk["tier"] = b["tier"]
-    blk["max_hp"] = round(blk["max_hp"] * (1.25 + 0.2 * TIERS.index(b["tier"])), 1)
+    blk["tier"] = b.get("tier") or "ELITE"
+    blk["max_hp"] = round(blk["max_hp"] * (1.25 + 0.2 * TIERS.index(b.get("tier") or "ELITE")), 1)
     if hp is not None:
         blk["hp"] = round(float(hp), 1)
     else:
@@ -257,7 +262,7 @@ def alert_text(bid: str, chat: dict) -> str:
     b = by_id(bid)
     t = TN.get(b.get("base")) or {}
     zone = (chat or {}).get("zone") or "ocean"
-    return (f"🚨 <b>MONARCH ALERT</b>\n\n"
+    return (f"🚨 <b>هشدار مانارچ</b>\n\n"
             f"SEISMIC ACTIVITY DETECTED.\n\n"
             f"👑 <b>TITAN:</b> {b['name']}\n"
             f"📍 <b>LOCATION:</b> {TN.ENVS.get(zone, zone)}\n"
@@ -265,7 +270,7 @@ def alert_text(bid: str, chat: dict) -> str:
             f"🕐 <b>WINDOW:</b> {b.get('mins', 35)} دقیقه\n\n"
             f"<i>{b.get('lore','')}</i>\n\n"
             f"▸ <code>/boss</code> — آغاز عملیات (حداکثر ۵ عامل در هر نبرد)\n"
-            f"<i>پایه‌ی زیستی: {t.get('name','UNKNOWN')} · ضعف ثبت‌شده: {', '.join((t.get('weak') or [])[:2]) or '—'}</i>")
+            f"<i>پایه‌ی زیستی: {t.get('name','ناشناخته')} · ضعف ثبت‌شده: {', '.join((t.get('weak') or [])[:2]) or '—'}</i>")
 
 
 def spawn(chat_id: int, bid: str = None, force: bool = False) -> dict:
@@ -366,8 +371,8 @@ def settle(chat_id: int, won: bool) -> dict:
     awards["support"] = best("support")
     awards["research"] = best("analyze")
     awards["last_hit"] = scored[0][0] if scored else None
-    labels = dict(damage="🥇 Most Damage", defense="🛡 Best Defense", support="❤️ Best Support",
-                  last_hit="🎯 Last Hit", research="🔬 Best Research")
+    labels = dict(damage="🥇 بیشترین آسیب", defense="🛡 بهترین دفاع", support="❤️ بهترین پشتیبانی",
+                  last_hit="🎯 ضربه آخر", research="🔬 بهترین پژوهش")
     share = 1.0 / max(1, len(parts))
     lines = []
     if won:
@@ -407,3 +412,8 @@ def decay() -> list:
         db.db().ex("UPDATE chats SET boss_id=NULL, boss_state=NULL, boss_until=0 WHERE chat_id=?",
                    (r["chat_id"],))
     return out
+
+
+# 🈂️ فازها/حملاتِ ویژه با برچسبِ لاتین → فارسی
+import fa as _fa
+_fa.fix(BOSSES)

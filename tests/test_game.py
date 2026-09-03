@@ -67,7 +67,7 @@ RESULTS = []
 def new_player(rank=1, uid=None, chat_id=None, zone="ocean"):
     uid = uid or next(_UID)
     chat_id = chat_id if chat_id is not None else next(_CHAT)
-    PL.ensure_player(uid, f"Agent{uid % 1000}", f"agent{uid % 1000}")
+    PL.ensure_player(uid, f"عامل{uid % 1000}", f"agent{uid % 1000}")
     PL.set_row(uid, rank=rank)
     p = PL.get(uid)
     PL.set_row(uid, hp=p["max_hp"], energy=p["max_energy"], resolve=80)
@@ -160,7 +160,7 @@ def build_bot():
 
 def msg(bot, text, uid=10001, chat_id=-100505, is_callback=False):
     chat = Chat(id=chat_id, type="supergroup")
-    u = User(id=uid, is_bot=False, first_name=f"Agent{uid % 100}")
+    u = User(id=uid, is_bot=False, first_name=f"عامل{uid % 100}")
     if is_callback:
         cq = CallbackQuery(id="cb1", from_user=u, message=message(bot, text, uid, chat_id),
                            data=text, chat_instance="ci")
@@ -171,7 +171,7 @@ def msg(bot, text, uid=10001, chat_id=-100505, is_callback=False):
 def message(bot, text, uid, chat_id):
     m = Message(message_id=random.randint(1, 10 ** 6), date=1_700_000_000,
                 chat=Chat(id=chat_id, type="supergroup"),
-                from_user=User(id=uid, is_bot=False, first_name=f"Agent{uid % 100}"),
+                from_user=User(id=uid, is_bot=False, first_name=f"عامل{uid % 100}"),
                 text=text)
     return m.as_(bot)
 
@@ -221,14 +221,18 @@ def test_03_titans_are_canon_and_data_driven():
     ids = set(TN.all_ids())
     assert not (must - ids), f"تایتان‌های اصلی کم‌اند: {sorted(must - ids)}"
     names = {TN.get(i)["name"] for i in ids}
-    for canon in ("Godzilla", "Kong", "Mothra", "King Ghidorah", "Mechagodzilla", "SpaceGodzilla"):
-        assert any(canon.lower() == n.lower() or canon.lower() in n.lower() for n in names), canon
-    for bad in ("Zorvox", "Titan-X9", "Neon"):
-        assert not any(bad.lower() in n.lower() for n in names), f"نام ساختگی: {bad}"
+    # نام‌های canon باید در شناسه زنده بمانند (جست‌وجوی لاتین) و نمایش فارسی باشد
+    for canon in ("godzilla", "kong", "mothra", "king_ghidorah", "mechagodzilla", "spacegodzilla"):
+        assert canon in ids, canon
+    assert all(TN.get(i)["name"] for i in ids), "نام نمایشی خالی است"
+    assert sum(1 for n in names if re.search(r"[\u0600-\u06FF]", n)) >= len(ids) - 2, \
+        "نام نمایشی تایتان‌ها باید فارسی باشد"
+    for bad in ("Zorvox", "Titan-X9", "Neon", "zorvox", "titan-x9"):
+        assert not any(bad in i for i in ids) and not any(bad.lower() in (n or "").lower() for n in names), f"نام ساختگی: {bad}"
     for t in TN.TITANS.values():
         assert t["rar"] in TN.RARITY, t["id"]
-        assert 2 <= len(t.get("ab") or []) <= 5, f"{t['name']} تعداد Ability نامعتبر"
-        assert t.get("ult") and t.get("pas"), f"{t['name']} اولتیمیت/پسیو ندارد"
+        assert 2 <= len(t.get("ab") or []) <= 5, f"{t['name']} تعداد مهارت نامعتبر"
+        assert t.get("ult") and t.get("pas"), f"{t['name']} ضربه نهایی/ذاتی ندارد"
         assert t["ult"] in AB.ABILITIES, f"{t['name']} اولتیمیتش تعریف نشده: {t['ult']}"
         assert t["pas"] in AB.PASSIVES, f"{t['name']} پسیوش تعریف نشده: {t['pas']}"
         for aid in t.get("ab") or []:
@@ -269,11 +273,11 @@ def test_05_fresh_player_gets_nothing_free():
     st = research.stage_of(uid, "godzilla")
     assert st == 0, "کشف خودکار انجام شد"
     d = research.dossier(uid, TN.get("godzilla"))
-    assert ("UNKNOWN" in d.upper() or "CLASSIFIED" in d.upper()), "پرونده‌ی کشف‌نشده باید مخفی بماند"
-    assert "Atomic Breath" not in d, "جزئیات تایتان کشف‌نشده لو رفته است"
+    assert ("ناشناخته" in d or "محرمانه" in d), "پرونده‌ی کشف‌نشده باید مخفی بماند"
+    assert "Atomic Breath" not in d and "مهارت" not in d, "جزئیات تایتان کشف‌نشده لو رفته است"
     cx = handlers.codex_text(uid) if hasattr(handlers, "codex_text") else None
     if cx is not None:
-        assert "UNKNOWN" in cx.upper() or "🕳" in cx
+        assert "ناشناخته" in cx or "🕳" in cx
 
 
 def test_06_research_funnel_gates():
@@ -298,7 +302,7 @@ def test_06_research_funnel_gates():
     assert float(PL.get(uid)["lab_until"]) > db.now(), "آزمایشگاه صف نشد"
     # پیوند: نیازمند مرحله + پیروزی + منابع
     deny = research.bond(uid, tid)
-    assert not deny["ok"] and "BOND DENIED" in deny["msg"]
+    assert not deny["ok"] and "پیوند رد شد" in deny["msg"]
     research.set_stage(uid, tid, 4)
     db.db().ex("INSERT OR REPLACE INTO bonds(user_id,titan_id,stage,points,kills,bond,bond_points,last) "
                "VALUES(?,?,5,40,5,1,0,?)", (uid, tid, db.now()))
@@ -350,7 +354,7 @@ def test_08_action_rate_limit_protects_group():
         r1 = combat.act(cidv, uid, "atk")
         r2 = combat.act(cidv, uid, "atk")
         assert r1.get("ok"), r1
-        assert not r2.get("ok") and "MONARCH Feed" in (r2.get("msg") or ""), \
+        assert not r2.get("ok") and "ثانیه" in (r2.get("msg") or ""), \
             "نوبت دوم بی‌cooldown اجرا شد (گروه شلوغ می‌شود)"
     finally:
         combat.now = real_now
@@ -428,7 +432,7 @@ def test_11_boss_lifecycle_five_awards():
     for key in ("damage", "defense", "support", "research", "last_hit"):
         assert key in s["winners"], f"جایزه‌ی {key} توزیع نشد"
     txt = str(s.get("msg"))
-    assert "Most Damage" in txt
+    assert "بیشترین آسیب" in txt
     assert bosses.active(cid) in (None, {}) or bosses.active(cid).get("bid") != bid, "باس بسته نشد"
     # decay: باس رهاشده باید منقضی شود
     bosses.settle(cid, False)
@@ -463,11 +467,11 @@ def test_12_world_raid_awards_and_activity():
     assert st["max_hp"] / max(1.0, 0.0015 * st["max_hp"]) <= 900, \
         "استخر رید برای یک گروه واقعی غیرقابل‌تمام‌کردن است"
     board = RA.board()
-    for tag in ("CONTRIBUTION", "💥", "🛡"):
-        assert tag in board
+    for tag in ("مشارکت", "یورش جهانی"):
+        assert tag in board, f"برچسب «{tag}» در تخته نیست: {board[:240]}"
     fin = RA.finish(True)
-    assert fin["ok"] and "Most Damage" in fin["msg"] and "Best Research" in fin["msg"]
-    assert "Best Defense" in fin["msg"] and "Best Support" in fin["msg"] and "Last Hit" in fin["msg"]
+    assert fin["ok"] and "بیشترین آسیب" in fin["msg"] and "بهترین پژوهش" in fin["msg"]
+    assert "بهترین دفاع" in fin["msg"] and "بهترین پشتیبانی" in fin["msg"] and "ضربه آخر" in fin["msg"]
     assert PL.get(uid)["raids"] >= 1
     assert (division.div_of(did) or {}).get("xp", xp0) > xp0, "فعالیت رید به Division ثبت نشد"
     # idempotency: دوباره تمام‌کردن نباید جایزه بدهد
@@ -515,9 +519,9 @@ def test_14_division_facilities_and_war():
     b = new_player(rank=12)[0]
     for u in (a, b):
         fund(u)
-    d1 = division.create(a, "MONARCH-ALPHA", "MA1")
+    d1 = division.create(a, "سازمانِ آلفا", "MA1")
     assert d1["ok"], d1
-    d2 = division.create(b, "MONARCH-BETA", "MB2")
+    d2 = division.create(b, "سازمانِ بتا", "MB2")
     assert d2["ok"], d2
     c3 = new_player(rank=12)[0]
     fund(c3)
@@ -540,7 +544,7 @@ def test_14_division_facilities_and_war():
     division.credit_activity(a, "expedition", 1)
     division.credit_activity(a, "boss_kill", 1)
     card = division.card(a)
-    assert "FACILITIES" in card
+    assert "تسهیلات" in card
     pairs = [dict(a=d1["did"], b=d2["did"], focus={})]
     w = division.war_start(pairs, hours=4)
     assert w and w.get("status") == "open", w
@@ -600,7 +604,7 @@ def test_16_shop_market_upgrade_sell():
         economy.upgrade(uid, "wp_ion")
     assert PL.item_level(uid, "wp_ion") <= 10
     mb = economy.market_board()
-    assert "DNA" in mb.upper() and "MC" in mb, mb[:120]
+    assert "قطعه ژنتیکی" in mb and "اعتبار" in mb, mb[:120]
     m = economy.sell(uid, "mats", 10)
     assert m["ok"]
     assert PL.get(uid)["mats"] >= 0
@@ -647,10 +651,10 @@ def test_18_texts_render_cleanly():
             for row in v:
                 if isinstance(row, dict):
                     assert row.get("title") and row.get("body"), name
-    assert "اسپم" in texts.RULES or "Spam" in texts.RULES
+    assert "اسپم" in texts.RULES
     assert "Auto-Win" in texts.RULES or "خودکار" in texts.RULES
     assert len(texts.LESSONS) >= 8
-    assert "Auto-Win" in texts.RULES and "Godzilla" in texts.RULES
+    assert "برد خودکار" in texts.RULES or "خودکار" in texts.RULES
 
 
 def test_19_ui_and_kb_locks():
@@ -658,10 +662,10 @@ def test_19_ui_and_kb_locks():
     fund(uid)
     p = PL.get(uid)
     card = PL.card(p)
-    assert "MONARCH" in card.upper() and "<b>" in card
+    assert "مانارچ" in card and "<b>" in card
     assert 4 <= ui.bar(50, 100).count("▰") <= 5
     assert ui.pct(30, 120) == 25
-    assert "⏱" in ui.dur(3700) or "h" in ui.dur(3700)
+    assert "ساعت" in ui.dur(3700) and "h" not in ui.dur(3700)
     stats = economy.stats_of(p)
     menu = kb.combat_menu(1, [dict(cb="cbt:1:atk", text="Attack", emj="sword"),
                               dict(cb="cbt:1:ability:x", text="X", emj="ability",
@@ -709,7 +713,7 @@ def test_20_events_cycles_are_quiet():
             continue
         assert n <= 3, f"چت {c} با {n} پیام بمباران شد (anti-spam)"
     pkt = events.news_packet(db.db().one("SELECT * FROM chats WHERE chat_id=?", (cid,)))
-    assert "MONARCH DAILY FEED" in pkt and len(pkt) < 3900
+    assert "گزارش روزانه مانارچ" in pkt and len(pkt) < 3900
     eng = events.Engine(bot, interval=1)
     assert eng is not None
 
@@ -742,7 +746,7 @@ def test_22_aiogram_smoke_flow():
     """مسیر واقعی: Update → فیلتر aiogram → هندلر → Transport ساختگی."""
     bot, sess = build_bot()
     uid = 10001
-    PL.ensure_player(uid, "Smoke Agent", "smoke")
+    PL.ensure_player(uid, "عاملِ آزمون", "smoke")
     PL.set_row(uid, rank=12)
     p = PL.get(uid)
     PL.set_row(uid, hp=p["max_hp"])
@@ -760,7 +764,7 @@ def test_22_aiogram_smoke_flow():
         await d.feed_update(bot, Update(update_id=4, message=message(bot, "/boss", uid, -100900)))
         await d.feed_update(bot, Update(update_id=5, message=message(bot, "/raid", uid, -100900)))
         await d.feed_update(bot, Update(update_id=6, message=message(bot, "/explore", uid, -100900)))
-        cq = CallbackQuery(id="c1", from_user=User(id=uid, is_bot=False, first_name="Smoke"),
+        cq = CallbackQuery(id="c1", from_user=User(id=uid, is_bot=False, first_name="آزمون"),
                            chat_instance="ci", data="menu:codex",
                            message=message(bot, "/start", uid, -100900)).as_(bot)
         await d.feed_update(bot, Update(update_id=7, callback_query=cq))
@@ -768,7 +772,19 @@ def test_22_aiogram_smoke_flow():
     names = [n for n, _d in sess.calls]
     assert "sendMessage" in names, f"هیچ پاسخی ارسال نشد: {names[:6]}"
     joined = "\n".join(sess.texts())
-    assert "MONARCH" in joined.upper()
+    assert "مانارچ" in joined, "برندِ فارسیِ مانارچ در پاسخ‌ها نیست"
+    # 🈂️ قراردادِ متنی: متنِ کاربر فارسی است؛ لاتین فقط «کد» و دستورِ اسلش.
+    stray = set()
+    for msg_txt in sess.texts():
+        body = re.sub(r"</?[a-zA-Z][^>]*>", " ", msg_txt)                      # برچسبِ HTML
+        body = re.sub(r"(?:^|[^\w])(?<![\w])(?:/[a-z_]{2,16})(?:[ \u200c]+[A-Za-z0-9_\-ژن]{1,16}){0,3}", " ", body)
+        body = re.sub(r"@\w+|t\.me/[\w+./\-]+|https?://\S+", " ", body)      # هندل و لینک
+        for m in re.finditer(r"[A-Za-z][A-Za-z0-9_.\-']{2,}", body):
+            w = m.group(0).strip(".'-")
+            if re.fullmatch(r"[A-Z][A-Z0-9.\-']{1,11}", w):                     # MA1 · MB2 · DIV-0001
+                continue
+            stray.add(w)
+    assert not stray, f"واژۀ لاتینِ بی‌اجازه در متنِ کاربر: {sorted(stray)[:6]}"
     for probe in ("کارت", "PROFILE", "OPERATIVE", "AGENT"):
         if probe in joined.upper():
             break
@@ -789,7 +805,7 @@ def test_22_aiogram_smoke_flow():
     asyncio.run(spam())
     n_spam = len(sess.texts()) - n_before
     assert n_spam <= config.SPAM_MAX + 3, f"ضداسپم کار نمی‌کند ({n_spam} پاسخ به ۱۴ درخواست پشت‌سرهم)"
-    warn = [t for t in sess.texts() if "RATE LIMIT" in t]
+    warn = [t for t in sess.texts() if "سقف مجاز" in t]
     assert warn, "سقف نرخ هیچ بازخوردی نمی‌دهد"
     assert len(warn) == 1, f"هشدارِ تکراری خودش اسپم است: {len(warn)}"
 
@@ -797,7 +813,7 @@ def test_22_aiogram_smoke_flow():
 def test_23_channel_gate_enforced():
     config.REQUIRE_CHANNEL = True
     uid = 100404
-    PL.ensure_player(uid, "Gate Agent", "gate")
+    PL.ensure_player(uid, "عاملِ دروازۀ", "gate")
     bot, sess = build_bot()
     from aiogram.types import ChatMemberLeft, ChatMemberAdministrator
 

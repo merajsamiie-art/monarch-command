@@ -19,15 +19,15 @@ def pas(pid, name, emj, desc, mods=None):
 
 
 # ───────── GODZILLA ─────────
-ab("atomic_breath", "Atomic Breath", "atom", 62, 0, 2.35, dict(charge=100), {"dmg": 1.0, "burn": 3, "mark": 2},
+ab("atomic_breath", "تنفسِ اتمی", "atom", 62, 0, 2.35, dict(charge=100), {"dmg": 1.0, "burn": 3, "mark": 2},
    "atomic", "پرتو اتمی کامل — فقط با شارژ ۱۰۰٪. تمام‌کننده‌ی نبرد.")
-ab("atomic_pulse", "Atomic Pulse", "atom", 26, 2, 1.15, {}, {"dmg": 1.0, "stun": 1, "knock": 8},
+ab("atomic_pulse", "تپشِ اتمی", "atom", 26, 2, 1.15, {}, {"dmg": 1.0, "stun": 1, "knock": 8},
    "atomic", "تپش هسته‌ای: آسیب متوسط + یک نوبت فلج.")
 ab("tail_sweep", "Tail Sweep", "sword", 12, 1, 0.72, {}, {"dmg": 1.0, "slow": 2, "blind": 1},
    "brute", "دمِ سنگین: تعادل حریف را می‌گیرد.")
 ab("nuclear_grasp", "Nuclear Grasp", "heavy", 20, 3, 0.95, {}, {"dmg": 1.0, "burn": 2, "drain": 0.25},
    "atomic", "چنگال رادیواکتیو: بخشی از انرژی را می‌مکد.")
-ab("alpha_roar", "Alpha Roar", "crown", 34, 5, 0.30, {}, {"dmg": 0.5, "dispel": 1, "defdown": 2, "atkup": 2},
+ab("alpha_roar", "غرّشِ آلفا", "crown", 34, 5, 0.30, {}, {"dmg": 0.5, "dispel": 1, "defdown": 2, "atkup": 2},
    "brute", "رامشِ آلفا: بافرهای حریف را می‌کَنَد و ترس می‌پراکند.")
 
 # ───────── KONG ─────────
@@ -52,7 +52,7 @@ ab("neck_constrict", "Neck Constrict", "sword", 18, 2, 1.10, {}, {"dmg": 1.0, "d
    "brute", "گره‌ی سه‌سر: خفگی و سرقت انرژی.")
 ab("dark_current", "Dark Current", "spark", 30, 3, 1.35, {}, {"dmg": 1.0, "stun": 1, "burn": 2},
    "electric", "رعد و برق مشکی؛ هم فلج، هم سوختگی.")
-ab("gravity_ray_storm", "Gravity Ray Storm", "storm", 66, 0, 2.45, dict(charge=100),
+ab("gravity_ray_storm", "طوفانِ گرانش پرتو", "storm", 66, 0, 2.45, dict(charge=100),
    {"dmg": 1.0, "stun": 2, "slow": 3, "knock": 25}, "storm",
    "طوفان پرتو جاذبه — آسمان شهر را پاک می‌کند.")
 
@@ -70,7 +70,7 @@ ab("rebirth_light", "Rebirth Radiance", "light", 60, 0, 1.95, dict(charge=100),
    "نورِ تولد دوباره؛ هم زخم حریف، هم احیای خود.")
 
 # ───────── RODAN ─────────
-ab("plasma_breath", "Plasma Breath", "flame", 24, 2, 1.22, {}, {"dmg": 1.0, "burn": 3},
+ab("plasma_breath", "تنفسِ پلاسما", "flame", 24, 2, 1.22, {}, {"dmg": 1.0, "burn": 3},
    "fire", "نفس پلاسمایی؛ سوختگی سه‌نوبته.")
 ab("supersonic_dive", "Supersonic Dive", "dodge", 18, 2, 1.35, {}, {"dmg": 1.0, "knock": 12},
    "flight", "شیرجه‌ی فراصوت؛ اگر جاخالی بدهی، بی‌ضرر است.")
@@ -80,13 +80,13 @@ ab("firestorm_spiral", "Firestorm Spiral", "volcano", 56, 0, 2.10, dict(charge=1
    {"dmg": 1.0, "burn": 4, "env": "volcano"}, "fire", "مارپیچ آتشین؛ محیط را آتشفشان می‌کند.")
 
 # ───────── MECHAGODZILLA ─────────
-ab("proton_scream", "Proton Scream", "mecha", 28, 2, 1.32, {}, {"dmg": 1.0, "stun": 1, "heat": 22},
+ab("proton_scream", "جیغِ پروتون", "mecha", 28, 2, 1.32, {}, {"dmg": 1.0, "stun": 1, "heat": 22},
    "tech", "جیغ پروتونی؛ اما هسته را داغ می‌کند.")
 ab("missile_barrage", "Missile Barrage", "heavy", 20, 3, 1.05, {}, {"dmg": 1.0, "blind": 1, "heat": 14},
    "tech", "رگبار موشک؛ چند ضربه‌ی پی‌درپی.")
-ab("target_lock", "Target Lock", "track", 12, 4, 0.0, {}, {"mark": 4, "accup": 4, "heat": 8},
+ab("target_lock", "قفلِ هدف", "track", 12, 4, 0.0, {}, {"mark": 4, "accup": 4, "heat": 8},
    "tech", "قفل هدف: ضربه‌ی بعدی کریت قطعی.")
-ab("titanium_jaw", "Titanium Jaw", "shield_doc", 14, 2, 0.95, {}, {"dmg": 1.0, "shield": 0.3, "heat": 6},
+ab("titanium_jaw", "فکِ تیتانیوم", "shield_doc", 14, 2, 0.95, {}, {"dmg": 1.0, "shield": 0.3, "heat": 6},
    "mech", "چنگ فلزی؛ هم ضربه، هم سپر.")
 ab("absolute_annihilation", "Absolute Annihilation", "mecha", 64, 0, 2.50, dict(charge=100, heat_max=1),
    {"dmg": 1.0, "stun": 2, "heat": 55, "shield": -0.6}, "tech",
@@ -97,7 +97,7 @@ ab("microoxygen_beam", "Oxygen Micro-Beam", "destoroyah", 24, 2, 1.24, {}, {"dmg
    "oxygen", "پرتوی که سلول را از هم می‌پاشد.")
 ab("agony_shoot", "Agony Shoot", "boss", 18, 3, 1.02, {}, {"dmg": 1.0, "stun": 1, "slow": 2},
    "brute", "شاخ‌های درد؛ تعویق و فلج کوتاه.")
-ab("ash_form", "Ash Form", "flee", 16, 4, 0.0, {}, {"dodgeup": 3, "dispel": 2, "shield": 0.25},
+ab("ash_form", "قالبِ خاکستر", "flee", 16, 4, 0.0, {}, {"dodgeup": 3, "dispel": 2, "shield": 0.25},
    "void", "فرم خاکستر: دو نوبت تقریباً نامرئی.")
 ab("cell_swarm", "Micro-Organ Cell Swarm", "swarm", 22, 3, 0.88, {}, {"dmg": 1.0, "acid": 2, "drain": 0.2},
    "acid", "موج ریزسلول‌ها؛ خوردگی و سرقت انرژی.")
@@ -119,12 +119,12 @@ ab("corona_burst_max", "Corona Burst MAX", "gem", 66, 0, 2.42, dict(charge=100),
 
 # ───────── بقیه‌ی کایجو (امضای هر تایتان) ─────────
 ab("spiny_roll", "Spiny Roll", "anguirus", 16, 2, 1.06, {}, {"dmg": 1.0, "bleed": 2}, "brute", "غلت تیغ‌دار.")
-ab("burrow_ambush", "Burrow Ambush", "dodge", 18, 3, 1.28, {}, {"dmg": 1.0, "stun": 1, "knock": 10}, "burrow", "از زیر زمین، بی‌صدا.")
+ab("burrow_ambush", "کمینِ کندن", "dodge", 18, 3, 1.28, {}, {"dmg": 1.0, "stun": 1, "knock": 10}, "burrow", "از زیر زمین، بی‌صدا.")
 ab("protect_instinct", "Protector Instinct", "guard", 12, 4, 0.0, {}, {"shield": 0.6, "defup": 3}, "brute", "سپر زنده.")
 ab("aegis_of_the_ancient", "Aegis of the Ancient", "guard", 52, 0, 1.70, dict(charge=100),
    {"dmg": 1.0, "shield": 0.9, "dispel": 4}, "brute", "سپر باستانی: هم ضربه، هم سپر کامل.")
 ab("acid_spray", "Acid Spray", "acid", 16, 2, 1.00, {}, {"dmg": 1.0, "acid": 3}, "acid", "اسید فرساینده.")
-ab("vine_lash", "Vine Crush", "dna", 18, 2, 1.14, {}, {"dmg": 1.0, "stun": 1, "drain": 0.22}, "brute", "ریشه‌ها می‌فشارند.")
+ab("vine_lash", "کوبشِ پیچک", "dna", 18, 2, 1.14, {}, {"dmg": 1.0, "stun": 1, "drain": 0.22}, "brute", "ریشه‌ها می‌فشارند.")
 ab("seed_barrage", "Seed Barrage", "dna", 20, 3, 0.92, {}, {"dmg": 1.0, "acid": 2, "blind": 1}, "venom", "باران دانه‌های اسیدی.")
 ab("cell_absorb", "Cell Absorb", "dna", 14, 4, 0.40, {}, {"dmg": 0.3, "heal": 0.30, "drain": 0.2}, "plant", "جذب زیست‌توده.")
 ab("floral_consumption", "Floral Consumption", "dna", 54, 0, 1.90, dict(charge=100),
@@ -142,22 +142,22 @@ ab("siren_descent", "Siren Descent", "boss", 26, 4, 1.18, {}, {"dmg": 1.0, "acid
 ab("toxic_dissolution", "Toxic Dissolution", "hedorah", 56, 0, 2.05, dict(charge=100),
    {"dmg": 1.0, "acid": 5, "dispel": 3}, "venom", "حل‌شدن سمی؛ همه‌چیز.")
 ab("drill_hands", "Drill Hands", "megalon", 16, 2, 1.08, {}, {"dmg": 1.0, "bleed": 2}, "brute", "مته‌های دست.")
-ab("burrow_charge", "Burrow Charge", "dodge", 14, 2, 1.00, {}, {"dmg": 1.0, "knock": 14}, "burrow", "حمله از تونل.")
+ab("burrow_charge", "شارژِ کندن", "dodge", 14, 2, 1.00, {}, {"dmg": 1.0, "knock": 14}, "burrow", "حمله از تونل.")
 ab("horn_burst", "Horn Burst", "spark", 20, 3, 1.14, {}, {"dmg": 1.0, "stun": 1}, "energy", "تخلیه‌ی شاخک.")
 ab("pyre_spiral", "Pyre Spiral", "flame", 50, 0, 1.80, dict(charge=100), {"dmg": 1.0, "burn": 3}, "fire", "مارپیچ آتش.")
-ab("guardian_roar", "Guardian Roar", "crown", 18, 4, 0.5, {}, {"atkup": 3, "shield": 0.4}, "light", "رامش نگهبان.")
+ab("guardian_roar", "غرّشِ حافظ", "crown", 18, 4, 0.5, {}, {"atkup": 3, "shield": 0.4}, "light", "رامش نگهبان.")
 ab("fang_rush", "Fang Rush", "sword", 14, 2, 1.04, {}, {"dmg": 1.0}, "brute", "دویدنِ نیش‌دار.")
 ab("spirit_ward", "Spirit Ward", "guard", 22, 5, 0.0, {}, {"shield": 0.8, "reflect": 0.3}, "light", "حریم شینتویی.")
 ab("sonic_wail", "Sonic Wail", "track", 20, 3, 1.06, {}, {"dmg": 0.8, "stun": 2, "blind": 2}, "sonic", "ناله‌ی فروسونیک.")
 ab("whirlpool_slam", "Whirlpool Slam", "ocean", 18, 2, 1.12, {}, {"dmg": 1.0, "knock": 10, "slow": 2}, "aquatic", "چرخش آب و تنه.")
-ab("resonance_collapse", "Resonance Collapse", "titanosaurus", 52, 0, 1.95, dict(charge=100),
+ab("resonance_collapse", "ریزشِ تشدید", "titanosaurus", 52, 0, 1.95, dict(charge=100),
    {"dmg": 1.0, "stun": 3, "dispel": 3}, "sonic", "فروپاشی تشدیدی.")
 ab("prismatic_lance", "Prismatic Lance", "light", 20, 2, 1.18, {}, {"dmg": 1.0, "blind": 2}, "light", "نیزه‌ی منشور.")
-ab("obsidian_dust", "Obsidian Dust", "warning", 18, 3, 0.86, {}, {"dmg": 0.7, "blind": 3, "acid": 2}, "dark", "گرد سیاه انتقام.")
+ab("obsidian_dust", "گردِ  ابسیدین", "warning", 18, 3, 0.86, {}, {"dmg": 0.7, "blind": 3, "acid": 2}, "dark", "گرد سیاه انتقام.")
 ab("planet_cleanser", "Planet Cleanser", "battra", 58, 0, 2.12, dict(charge=100),
    {"dmg": 1.0, "stun": 2, "env": "jungle"}, "light", "پاکسازی سیاره.")
 ab("missile_fist", "Missile Fist", "heavy", 18, 2, 1.10, {}, {"dmg": 1.0, "burn": 1}, "tech", "مشت موشکی.")
-ab("jet_dash", "Jet Dash", "dodge", 12, 1, 0.95, {}, {"dmg": 1.0, "knock": 8}, "flight", "دویدن جت‌مانند.")
+ab("jet_dash", "جهشِ جت", "dodge", 12, 1, 0.95, {}, {"dmg": 1.0, "knock": 8}, "flight", "دویدن جت‌مانند.")
 ab("grow_protocol", "Grow Protocol", "binary", 16, 5, 0.0, {}, {"atkup": 4, "hp_temp": 0.15}, "tech", "پروتکل بزرگ‌شدن.")
 ab("scan_lock", "Scan & Lock", "track", 10, 3, 0.0, {}, {"mark": 3, "accup": 3}, "tech", "اسکن و قفل.")
 ab("ga_plasma", "Go Plasma", "spark", 20, 2, 1.14, {}, {"dmg": 1.0, "burn": 2}, "tech", "پلاسمای ماسر.")
@@ -165,21 +165,21 @@ ab("drill_arms", "Drill Arms", "megalon", 16, 2, 1.06, {}, {"dmg": 1.0, "bleed":
 ab("earthen_ray", "Earthen Ray", "flame", 18, 2, 1.10, {}, {"dmg": 1.0, "burn": 2}, "fire", "پرتو خاکی.")
 ab("tunnel_ambush", "Tunnel Ambush", "dodge", 14, 2, 1.02, {}, {"dmg": 1.0, "stun": 1}, "burrow", "کمین تونلی.")
 ab("silk_snare", "Silk Snare", "guard", 14, 3, 0.55, {}, {"dmg": 0.3, "stun": 2, "slow": 2}, "silk", "تار چسبنده.")
-ab("venom_bite", "Venom Bite", "acid", 14, 2, 1.02, {}, {"dmg": 1.0, "acid": 2}, "venom", "نیش سمی.")
+ab("venom_bite", "گازِ زهر", "acid", 14, 2, 1.02, {}, {"dmg": 1.0, "acid": 2}, "venom", "نیش سمی.")
 ab("pack_swarm", "Pack Swarm", "swarm", 16, 3, 0.90, {}, {"dmg": 1.0, "blind": 1}, "brute", "حمله‌ی دسته‌جمعی.")
 ab("electro_claw", "Electro-Claw", "spark", 18, 2, 1.14, {}, {"dmg": 1.0, "stun": 1}, "electric", "چنگال برقی.")
 ab("crustacean_crush", "Crustacean Crush", "heavy", 20, 3, 1.20, {}, {"dmg": 1.0, "knock": 12}, "brute", "پارچۀ سخت‌پوست.")
-ab("coil_crush", "Coil Crush", "manda", 20, 3, 1.22, {}, {"dmg": 1.0, "stun": 2, "drain": 0.15}, "brute", "حلقه‌های مرگ.")
+ab("coil_crush", "کوبشِ پیچ", "manda", 20, 3, 1.22, {}, {"dmg": 1.0, "stun": 2, "drain": 0.15}, "brute", "حلقه‌های مرگ.")
 ab("kangaroo_kick", "Kangaroo Kick", "heavy", 16, 2, 1.08, {}, {"dmg": 1.0, "knock": 10}, "brute", "لگد دوپا.")
 ab("glide_rake", "Glide Rake", "sword", 14, 2, 1.00, {}, {"dmg": 1.0, "bleed": 2}, "flight", "خزش و چنگال.")
-ab("void_claw", "Void Claw", "monsterx", 20, 2, 1.20, {}, {"dmg": 1.0, "acid": 2}, "void", "چنگال پوچی.")
+ab("void_claw", "چنگالِ پوچ", "monsterx", 20, 2, 1.20, {}, {"dmg": 1.0, "acid": 2}, "void", "چنگال پوچی.")
 ab("energy_absorb", "Energy Absorb", "charge", 10, 3, 0.40, {}, {"dmg": 0.2, "drain": 0.5, "charge": 18}, "void", "جذب انرژی حریف.")
-ab("arm_fang", "Arm Fang", "sword", 16, 2, 1.10, {}, {"dmg": 1.0, "bleed": 2}, "brute", "دندانِ بازو.")
-ab("quantum_swarm", "Quantum Swarm", "swarm", 18, 3, 0.95, {}, {"dmg": 1.0, "drain": 0.25}, "energy", "موج مگس‌های کوانتومی.")
+ab("arm_fang", "دندانِ بازو", "sword", 16, 2, 1.10, {}, {"dmg": 1.0, "bleed": 2}, "brute", "دندانِ بازو.")
+ab("quantum_swarm", "دستهِ کوانتومی", "swarm", 18, 3, 0.95, {}, {"dmg": 1.0, "drain": 0.25}, "energy", "موج مگس‌های کوانتومی.")
 ab("annihilation_ring", "Annihilation Ring", "megaguirus", 54, 0, 2.05, dict(charge=100),
    {"dmg": 1.0, "burn": 3, "dispel": 2}, "solar", "حلقه‌ی فانی؛ خورشید را می‌آورد.")
 ab("dark_matter_barrier", "Dark Matter Barrier", "guard", 22, 4, 0.0, {}, {"shield": 0.95, "reflect": 0.5}, "dark", "سد ماده‌ی تاریک.")
-ab("void_beam", "Void Beam", "destoroyah", 24, 2, 1.26, {}, {"dmg": 1.0, "acid": 2}, "void", "پرتو پوچ.")
+ab("void_beam", "پرتوِ پوچ", "destoroyah", 24, 2, 1.26, {}, {"dmg": 1.0, "acid": 2}, "void", "پرتو پوچ.")
 ab("the_beast_rises", "The Beast Rises", "monsterx", 60, 0, 2.30, dict(charge=100),
    {"dmg": 1.0, "phase": 1, "stun": 1, "heal": 0.2}, "void", "Monster X از خاکستر بلند می‌شود.")
 ab("gravity_clamp", "Gravity Clamp", "spark", 26, 2, 1.30, {}, {"dmg": 1.0, "slow": 3, "pull": 14}, "gravity", "گیره‌ی جاذبه.")
@@ -201,10 +201,10 @@ ab("branch_lash", "Branch Lash", "dna", 14, 2, 1.00, {}, {"dmg": 1.0, "slow": 2}
 ab("electro_net", "Electro Net", "spark", 18, 3, 1.05, {}, {"dmg": 1.0, "stun": 2}, "electric", "شبکه‌ی برکه.")
 ab("molt_whip", "Molt Whip", "abaddon", 16, 2, 1.04, {}, {"dmg": 1.0, "bleed": 2, "shield": 0.2}, "brute", "شلاق پوست‌اندازی.")
 ab("resonance_call", "Resonance Call", "muto", 20, 3, 1.02, {}, {"dmg": 0.8, "stun": 2, "blind": 2}, "sonic", "فراخوان تشدید.")
-ab("skull_crush", "Skull Crush", "skullcrawler", 16, 2, 1.12, {}, {"dmg": 1.0, "bleed": 2}, "brute", "فشار فک.")
+ab("skull_crush", "کوبشِ جمجمه", "skullcrawler", 16, 2, 1.12, {}, {"dmg": 1.0, "bleed": 2}, "brute", "فشار فک.")
 ab("wing_gust", "Wing Gust", "dodge", 12, 2, 0.92, {}, {"dmg": 0.9, "knock": 8}, "flight", "تندباد بال.")
-ab("strike_basic", "Standard Strike", "sword", 8, 0, 0.80, {}, {"dmg": 1.0}, "kinetic", "ضربه‌ی استاندارد MONARCH.")
-ab("emp_charge", "EMP Charge", "spark", 22, 4, 1.10, {}, {"dmg": 0.8, "stun": 1, "drain": 0.4}, "electric", "تخلیه‌ی الکترومغناطیسی.")
+ab("strike_basic", "ضربهِ استاندارد", "sword", 8, 0, 0.80, {}, {"dmg": 1.0}, "kinetic", "ضربه‌ی استاندارد مانارچ.")
+ab("emp_charge", "شارژِ پالس", "spark", 22, 4, 1.10, {}, {"dmg": 0.8, "stun": 1, "drain": 0.4}, "electric", "تخلیه‌ی الکترومغناطیسی.")
 ab("concussion_grenade", "Concussion Charge", "heavy", 18, 3, 1.00, {}, {"dmg": 1.0, "stun": 1, "blind": 1}, "kinetic", "شارج کوبنده.")
 ab("nanite_repair", "Nanite Repair", "medkit", 16, 5, 0.0, {}, {"heal": 0.28, "dispel": 2}, "tech", "ترمیم نانو.")
 ab("orbital_laser", "Orbital Laser", "track", 30, 4, 1.45, dict(needs_mark=1), {"dmg": 1.0, "burn": 1}, "tech", "لایزِ مداری — فقط روی هدف قفل‌شده.")
@@ -286,3 +286,11 @@ def sync_kits() -> dict:
 
 
 STATS = sync_kits()
+
+# 🈂️ قراردادِ متنی: هر نامِ لاتینِ باقی‌مانده (از جمله مهارت‌های سنتز‌شده و اورلی‌های
+# data/kits.json) در زمانِ بارگذاری فارسی می‌شود؛ `en` برای جست‌وجو/لاگ می‌ماند.
+import fa as _fa
+_fa.fix(ABILITIES)
+_fa.fix(PASSIVES)
+for _p in PASSIVES.values():
+    _p["emj"] = EMJ.of(_p.get("emj"), "🧬")

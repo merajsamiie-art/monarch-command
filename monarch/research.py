@@ -1,5 +1,6 @@
 # 🔬 Research & Discovery Engine — کشف تایتان، سیگنال، نمونه، تحلیل، پیوند
 import random
+import re
 
 import balance
 import config
@@ -45,7 +46,7 @@ def codename(uid: int, t: dict) -> tuple:
     if is_known(uid, t["id"]):
         return t["name"], t["emj"]
     idx = (hash(t["id"]) % 90) + 10
-    return f"UNKNOWN TITAN {idx}", "🕳"
+    return f"تایتانِ ناشناخته {idx}", "🕳"
 
 
 def add_points(uid: int, tid: str, pts: float, reason: str = "misc") -> dict:
@@ -88,7 +89,7 @@ def bar(row_: dict) -> str:
 
 # ─────────── اکشن‌های میدانی ───────────
 def _facility_bonus(uid: int) -> tuple:
-    """Radars/Lab سطح Division روی تحقیق اثر دارد (نه پول‌پسند)."""
+    """Radars/Lab سطح سازمان روی تحقیق اثر دارد (نه پول‌پسند)."""
     import division
     radar = division.facility_of(uid, "radar")
     lab = division.facility_of(uid, "lab")
@@ -105,7 +106,7 @@ def track(uid: int, chat: dict, zone: str = None) -> dict:
     if player_energy(uid) < 10:
         return dict(ok=False, msg="🔋 انرژی کافی نداری (۱۰ لازم است).")
     if p.get("dead_until") and float(p["dead_until"]) > now():
-        return dict(ok=False, msg="☠️ در Recovery Mode ردیابی ممکن نیست.")
+        return dict(ok=False, msg="☠️ در حالت بازیابی ردیابی ممکن نیست.")
     db.db().apply(uid, energy=max(0.0, float(p["energy"]) - 10))
     rad, lab, _ = _facility_bonus(uid)
     zone = zone or (chat or {}).get("zone") or "ocean"
@@ -118,11 +119,11 @@ def track(uid: int, chat: dict, zone: str = None) -> dict:
     PL.progress(uid, "track", 1)
     PL.track_stat(uid, "research_done", 0)
     known = is_known(uid, t["id"])
-    label, emj = codename(uid, t) if known else (f"UNKNOWN SIGNATURE {t['id'][:4].upper()}", "🕳")
+    label, emj = codename(uid, t) if known else (f"امضایِ ناشناخته {abs(hash(t['id'])) % 900 + 100}", "🕳")
     return dict(ok=True, tid=t["id"], pts=pts, msg=(
-        f"📡 <b>SIGNAL INTERCEPT</b>\n"
-        f"🌍 {TN.ENVS.get(zone, zone)} · امضا: <code>{t['id'][:6].upper()}</code>\n"
-        f"{'🔓 پرونده باز شد: ' + label if res.get('advanced') and res.get('stage', 0) >= 1 else '🗝 هنوز کلاسیفای‌د — ' + str(pts) + ' امتیاز تحقیق'}"),
+        f"📡 <b>رهگیری سیگنال</b>\n"
+        f"🌍 {TN.ENVS.get(zone, zone)} · امضا: <code>{abs(hash(t['id'])) % 90000 + 1000}</code>\n"
+        f"{'🔓 پرونده باز شد: ' + label if res.get('advanced') and res.get('stage', 0) >= 1 else '🗝 هنوز محرمانه — ' + str(pts) + ' امتیاز تحقیق'}"),
         advanced=res.get("advanced", 0))
 
 
@@ -152,7 +153,7 @@ def sample(uid: int, tid: str, chat: dict = None) -> dict:
     if not t:
         return dict(ok=False, msg="🗄 چنين تایتانی در دیتابیس نیست.")
     if p.get("dead_until") and float(p["dead_until"]) > now():
-        return dict(ok=False, msg=f"☠️ Recovery Mode — {PL.cd_left(uid, 'recovery')} ثانیه.")
+        return dict(ok=False, msg=f"☠️ حالتِ بازیابی — {PL.cd_left(uid, 'recovery')} ثانیه.")
     if PL.on_cd(uid, "sample"):
         return dict(ok=False, msg=f"⏳ نمونه‌برداری در آماده‌سازی: {PL.cd_left(uid, 'sample'):.0f} ثانیه")
     r = row(uid, tid)
@@ -173,17 +174,17 @@ def sample(uid: int, tid: str, chat: dict = None) -> dict:
         newhp = float(p["hp"]) - hurt
         if newhp <= 0:
             PL.die(uid, "SAMPLING_ACCIDENT")
-            return dict(ok=True, msg=(f"🩸 <b>SAMPLING FAILURE</b> — {t['name']}\n"
+            return dict(ok=True, msg=(f"🩸 <b>نمونه‌برداری ناموفق</b> — {t['name']}\n"
                                       f"نمونه‌ی ناخوش‌ایند… واحد واکنش سریع تو را برداشت.\n"
-                                      f"☠️ <b>AGENT DOWN</b> · Recovery {config.RECOVERY_MINUTES} دقیقه"))
+                                      f"☠️ <b>عامل از پا درآمده</b> · بازیابی {config.RECOVERY_MINUTES} دقیقه"))
         db.db().apply(uid, hp=max(1.0, newhp), resolve=max(0.0, float(p.get("resolve") or 0) - 6))
-        return dict(ok=True, msg=(f"⚠️ <b>SPECIMEN SECURED / INJURY</b>\n"
+        return dict(ok=True, msg=(f"⚠️ <b>نمونه تأمین شد / آسیب</b>\n"
                                   f"🧬 {hurt:.0f} آسیب · 🎯 +۴۰ امتیاز تحقیق {t['name']}"))
     pts = random.uniform(34, 62)
     res = add_points(uid, tid, pts, "sample")
-    return dict(ok=True, msg=(f"🧬 <b>SAMPLE SECURED</b> — {t['name']}\n"
+    return dict(ok=True, msg=(f"🧬 <b>نمونه تأمین شد</b> — {t['name']}\n"
                               f"🔬 +{pts:.0f} امتیاز تحقیق"
-                              + (f"\n🚨 <b>STAGE UP</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")))
+                              + (f"\n🚨 <b>ارتقای مرحله</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")))
 
 
 def analyze(uid: int, tid: str) -> dict:
@@ -211,7 +212,7 @@ def analyze(uid: int, tid: str) -> dict:
     db.db().apply(uid, lab_titan=tid, lab_stage="analyze", lab_until=now() + dur,
                   lab_points=float(r.get("points") or 0))
     PL.set_cd(uid, "analyze", config.CD_ANALYZE)
-    return dict(ok=True, msg=(f"🔬 <b>ANALYSIS QUEUE</b> — {t['name']}\n"
+    return dict(ok=True, msg=(f"🔬 <b>صف تحلیل</b> — {t['name']}\n"
                               f"⏱ {dur/60:.0f} دقیقه · هزینه: "
                               + " · ".join(f"{k} {v}" for k, v in cost.items())
                               + "\n<i>با /lab نتیجه را بگیر.</i>"),
@@ -231,18 +232,18 @@ def lab_check(uid: int) -> dict:
     db.db().apply(uid, lab_titan=None, lab_stage=None, lab_until=0, lab_points=0)
     PL.progress(uid, "lab", 1)
     if random.random() < fail:
-        return dict(ok=True, msg=(f"🧪 <b>LAB FAILURE</b> — {t.get('name', '—')}\n"
+        return dict(ok=True, msg=(f"🧪 <b>خطای آزمایشگاه</b> — {t.get('name', '—')}\n"
                                   f"نمونه آلوده شد؛ ۴۰٪ پیشرفت از دست رفت.\n"
-                                  f"🏢 ارتقای Laboratory در Division ریسک را کم می‌کند."),
+                                  f"🏢 ارتقای Laboratory در سازمان ریسک را کم می‌کند."),
                     fail=True)
     pts = random.uniform(90, 150) * lab_mult
     res = add_points(uid, tid, pts, "analyze")
     import player as _P
     _P.add_res(uid, fdata=1)
     _P.add_xp(uid, 12 + 4 * balance.titans_rarity_idx(t.get("rar", "RARE")))
-    return dict(ok=True, msg=(f"🔬 <b>ANALYSIS COMPLETE</b> — {t.get('name')}\n"
-                              f"📊 +{pts:.0f} امتیاز تحقیق · 📡 +۱ Classified Data\n"
-                              + (f"🚨 <b>STAGE UP</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")),
+    return dict(ok=True, msg=(f"🔬 <b>تحلیل کامل شد</b> — {t.get('name')}\n"
+                              f"📊 +{pts:.0f} امتیاز پژوهش · 📡 ۱ دادهٔ محرمانه+\n"
+                              + (f"🚨 <b>ارتقای مرحله</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")),
                 advanced=res.get("advanced", 0))
 
 
@@ -277,7 +278,7 @@ def bond(uid: int, tid: str) -> dict:
         return dict(ok=False, msg=f"⏳ پروتکل پیوند خنک است — {PL.cd_left(uid, 'bond'):.0f}s")
     chk = gates_ok(p, t)
     if not chk["ok"]:
-        return dict(ok=False, msg=f"🔒 <b>BOND DENIED</b> — {t['name']}\n"
+        return dict(ok=False, msg=f"🔒 <b>پیوند رد شد</b> — {t['name']}\n"
                                   + "\n".join(f"▪️ {m}" for m in chk["missing"]))
     g = chk["gate"]
     PL.spend(uid, dna=-g["dna"], fdata=-g["fdata"], cores=-g["cores"])
@@ -287,7 +288,7 @@ def bond(uid: int, tid: str) -> dict:
     db.db().ex("UPDATE bonds SET stage=?, bond=?, points=0, bond_points=? WHERE user_id=? AND titan_id=?",
                (stage, max(1, int(r.get("bond") or 0)), 0, int(uid), tid))
     db.db().feed("bond", f"{uid}:{tid}")
-    return dict(ok=True, msg=(f"👑 <b>TITAN BOND ESTABLISHED</b>\n"
+    return dict(ok=True, msg=(f"👑 <b>پیوند تایتان برقرار شد</b>\n"
                               f"{t['emj']} <b>{t['name']}</b> · تراز ۱\n"
                               f"▸ اکسِ «{t['name']}» در نبرد باز شد (دکمه‌ی ☄️)\n"
                               f"▸ با /bond up تراز را بالا ببر\n"
@@ -384,6 +385,7 @@ def set_stage(uid: int, tid: str, stage: int):
 
 
 # ─────────── رمزنگاری MONARCH (پازلی) ───────────
+FA_ALPHA = "ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"   # ۳۲ نگاشت برای رمزِ چرخشی
 PUZZLE_KINDS = ("cipher", "seismic", "sigil")
 
 
@@ -397,12 +399,14 @@ def puzzle_new(uid: int) -> dict:
     kind = random.choice(PUZZLE_KINDS)
     shift = random.randint(1, 7)
     if kind == "cipher":
-        name = t["name"].upper().replace(" ", "")
-        enc = "".join(chr((ord(c) - 65 + shift) % 26 + 65) for c in name if c.isalpha())
-        q = f"رمز MONARCH: «{enc}» با شیفت {shift} — کدام تایتان؟"
+        # چرخش روی الفبای فارسی — متنِ هرگز به لاتین تبدیل نمی‌شود
+        name = re.sub(r"[^\u0600-\u06FF]", "", str(t["name"])).replace("\u200c", "")
+        enc = "".join(FA_ALPHA[(FA_ALPHA.index(c) + shift) % len(FA_ALPHA)] if c in FA_ALPHA else c
+                      for c in name)
+        q = f"🔐 <b>رمزِ مانارچ</b>: «{enc}» با جابه‌جایی {shift} — این نامِ کدام تایتان است؟"
     elif kind == "seismic":
         mag = round(3.1 + t["threat"] * 1.4 + random.uniform(0, .9), 1)
-        q = (f"ثبت لرزه‌نگار: بزرگی {mag}، عمق {random.randint(2, 60)}km، "
+        q = (f"ثبتِ لرزه‌نگار: بزرگی {mag}، عمق {random.randint(2, 60)} کیلومتر، "
              f"امضای {TN.ENVS.get(random.choice(list(t['env'] or {'ocean': 1})), '🌊')} — "
              f"کدام تایتان بیشترین سازگاری را دارد؟")
     else:
@@ -428,63 +432,62 @@ def puzzle_answer(uid: int, chosen: str) -> dict:
     db.db().setv(f"pz:{uid}", None)
     if not right:
         return dict(ok=False, right=data["answer"],
-                    msg="❌ <b>DECODE FAILED</b> — امضا ناخوانا ماند. (بدون جریمه، فقط زمان)")
+                    msg="❌ <b>رمزگشایی ناموفق</b> — امضا ناخوانا ماند. (بدون جریمه، فقط زمان)")
     PL.track_stat(uid, "puzzles", 1)
     PL.progress(uid, "puzzle", 1)
     res = add_points(uid, data["tid"], config.PUZZLE_POINTS, "puzzle")
     t = TN.get(data["tid"]) or {}
-    return dict(ok=True, msg=(f"✅ <b>DECODE SUCCESS</b> — {t.get('name', '')}\n"
-                              f"🔬 +{config.PUZZLE_POINTS} امتیاز تحقیق"
-                              + (f"\n🚨 <b>STAGE UP</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")))
+    return dict(ok=True, msg=(f"✅ <b>رمزگشایی موفق</b> — {t.get('name', '')}\n"
+                              f"🔬 +{config.PUZZLE_POINTS} امتیاز پژوهش"
+                              + (f"\n🚨 <b>ارتقای مرحله</b> → {STAGES[res['stage']]['label']}" if res.get("advanced") else "")))
 
 
 def dossier(uid: int, t: dict) -> str:
+    """پروندۀ تایتان — چارچوبش در ui.titan_file است؛ اینجا فقط داده."""
     import ui
+    import abilities as AB
     r = row(uid, t["id"])
     known = is_known(uid, t["id"])
     name, emj = codename(uid, t)
+    code = abs(hash(t["id"])) % 90000 + 1000
     if not known:
-        return ("\n".join([
-            f"{emj} <b>MONARCH DATABASE</b> — <code>{t['id'][:6].upper()}</code>",
-            "🗝 STATUS: <b>UNKNOWN</b>", "",
-            "<i>هیچ امضای تایید‌شده‌ای ثبت نشده.</i>",
-            f"▪️ توده‌ی تخمینی: {random.Random(hash(t['id'])).randint(2, 9) * 10}kt",
-            f"▪️ تهدید: {ui.threat_stars(t.get('threat', 1))}",
-            "", "📡 با /track در منطقه‌ی سازگار سیگنال جمع کن."]))
-    stats = [(m, t[k]) for m, k in (("❤️ HP", "hp"), ("⚔️ ATK", "atk"), ("🛡 DEF", "df"), ("⚡ SPD", "spd"),
-                                    ("🔋 Energy", "eng"), ("🧠 INT", "int"), ("🧬 Regen", "reg"),
-                                    ("🎯 ACC", "acc"), ("🏃 Dodge", "dodge"), ("🛡 RES", "res"))]
+        return ui.titan_file(dict(name=name, emj=emj, code=code, threat=t.get("threat", 1),
+                                   mass=f"{random.Random(hash(t['id'])).randint(2, 9) * 10} هزار تن"),
+                             hidden=True)
+    stats = [(lbl, t[k]) for lbl, k in (("❤️ جان", "hp"), ("⚔️ آسیب", "atk"), ("🛡 سپر", "df"),
+                                        ("⚡ سرعت", "spd"), ("🔋 انرژی", "eng"), ("🧠 هوش", "int"),
+                                        ("🧬 بازیابی", "reg"), ("🎯 دقت", "acc"), ("🏃 جاخالی", "dodge"),
+                                        ("🛡 مقاومت", "res"))]
     ab = []
-    import abilities as AB
     for aid in t["ab"]:
-        a = AB.get(aid)
-        ab.append(f"☄️ {a['name']} <i>({a['cost']}⚡ / cd{a['cd']})</i> — {a['desc']}")
+        a_ = AB.get(aid)
+        if not a_:
+            continue
+        cd = f" · خاموشی {a_['cd']} نوبت" if a_.get("cd") else ""
+        ab.append(f"☄️ <b>{a_['name']}</b> <i>({a_.get('cost', 0)} انرژی{cd})</i>\n"
+                  f"   <i>{a_.get('desc', '')}</i>")
     ult = AB.ult_of(t["id"])
     pas = AB.passive_of(t["id"])
-    g = balance.gate_of(t["rar"])
-    lines = [f"{emj} <b>{name}</b> · {ui.rarity_badge(t['rar'])}",
-             f"<i>{t.get('origin', '')} · {t.get('h', '—')} · {t.get('w', '—')}</i>",
-             "", t.get("lore", ""), "", "▬▬▬▬▬▬▬▬▬▬▬", "📊 <b>STATS</b>"]
-    for i in range(0, len(stats), 2):
-        pair = stats[i:i + 2]
-        lines.append(" · ".join(f"{lbl} <code>{v:,}</code>" for lbl, v in pair))
-    lines += ["", f"🌍 <b>ENVIRONMENT</b>: " + (" · ".join(f"{TN.ENVS.get(k, k)} ×{v}"
-                                                            for k, v in (t.get("env") or {}).items()) or "—"),
-              f"❌ <b>WEAKNESS</b>: {', '.join(t['weak']) or '—'}",
-              f"🛡 <b>RESISTANCE</b>: {', '.join(t['resist']) or '—'}",
-              f"🧬 <b>PASSIVE</b>: {pas['emj']} {pas['name']} — {pas['desc']}", "",
-              "☄️ <b>ABILITIES</b>"] + ab
-    if ult:
-        lines += ["", f"👑 <b>ULTIMATE</b>: {ult['emj']} {ult['name']} <i>({ult['cost']}⚡)</i> — {ult['desc']}"]
-    lines += ["", f"🔬 <b>RESEARCH</b>: {bar(r)}", f"⚔️ شکار موفق: <b>{r.get('kills', 0)}</b> · "
-                f"👑 تراز پیوند: <b>{r.get('bond', 0)}</b>"]
+    ult_line = (f"👑 <b>{ult['name']}</b> <i>({ult.get('cost', 0)} انرژی · "
+                f"شارژِ کامل)</i>\n   <i>{ult.get('desc', '')}</i>") if ult else ""
     chk = gates_ok(db.db().player(uid) or {}, t)
+    d = dict(name=name, emj=emj, code=code, threat=t.get("threat", 1), origin=t.get("origin", ""),
+             h=t.get("h", "—"), w=t.get("w", "—"), lore=t.get("lore", ""), stats=stats,
+             env=[f"{TN.ENVS.get(k, k)} ×{v}" for k, v in (t.get("env") or {}).items()],
+             weak=[w_ for w_ in (t.get("weak") or [])], resist=[x for x in (t.get("resist") or [])],
+             passive=(pas["name"], pas.get("desc", "")) if pas else None,
+             abilities=ab, ultimate=ult_line, id=t["id"],
+             research=(f"🔬 {bar(r)} · مرحلۀ {int(r.get('stage') or 0)}/{len(STAGES) - 1}"
+                       f" · ⚔️ شکار موفق <b>{r.get('kills', 0)}</b>"
+                       f" · 👑 تراز پیوند <b>{r.get('bond', 0)}</b>"),
+             badge="🎗 " + str((TN.RARITY.get(t["rar"]) or {}).get("name") or t["rar"]),
+             cls=(TN.RARITY.get(t["rar"]) or {}).get("cls", "محرمانه"))
     if int(r.get("stage") or 0) >= 4 and not int(r.get("bond") or 0):
         if chk["missing"]:
-            lines += ["", "🔓 <b>BOND REQUIREMENTS</b>"] + [f"▪️ {m}" for m in chk["missing"]]
+            d["gate_missing"] = chk["missing"]
         else:
-            lines += ["", f"✅ آماده‌ی پیوند — /bond {t['id']}"]
-    return "\n".join(lines)
+            d["bond_ready"] = True
+    return ui.titan_file(d)
 
 
 def discovery_ranking(limit: int = 8) -> list:

@@ -12,14 +12,14 @@ import titans as TN
 from db import now
 
 ACTIONS = {
-    "atk": dict(name="Attack", emj="sword", cost=3.0, desc="ضربه‌ی استاندارد — ارزان و قابل‌اتکا"),
-    "heavy": dict(name="Heavy Attack", emj="heavy", cost=9.0, cd=2, desc="×۱٫۸۵ آسیب، دقت کمتر، Cooldown"),
-    "guard": dict(name="Guard", emj="guard", cost=2.0, desc="−۵۵٪ آسیب این نوبت + پنجره‌ی کانتر + شارژ"),
-    "dodge": dict(name="Dodge", emj="dodge", cost=3.0, desc="+جاخالی این نوبت + شارژ کم"),
+    "atk": dict(name="حمله", emj="sword", cost=3.0, desc="ضربه‌ی استاندارد — ارزان و قابل‌اتکا"),
+    "heavy": dict(name="حمله سنگین", emj="heavy", cost=9.0, cd=2, desc="×۱٫۸۵ آسیب، دقت کمتر، Cooldown"),
+    "guard": dict(name="سپر", emj="guard", cost=2.0, desc="−۵۵٪ آسیب این نوبت + پنجره‌ی کانتر + شارژ"),
+    "dodge": dict(name="جاخالی", emj="dodge", cost=3.0, desc="+جاخالی این نوبت + شارژ کم"),
     "counter": dict(name="Counter", emj="counter", cost=4.0, desc="کانتر پس از گارد موفق / ریسک‌خواندن"),
-    "charge": dict(name="Charge", emj="charge", cost=0.0, desc="+۳۴ شارژ هسته‌ای، رفع خستگی"),
+    "charge": dict(name="شارژ", emj="charge", cost=0.0, desc="+۳۴ شارژ هسته‌ای، رفع خستگی"),
     "overdrive": dict(name="Overdrive", emj="atom", cost=6.0, desc="مصرف ۱۰۰ شارژ → تمرکز ۲ نوبت"),
-    "retreat": dict(name="Retreat", emj="retreat", cost=0.0, desc="فرار؛ ریسک ضربه‌ی آخر"),
+    "retreat": dict(name="عقب‌نشینی", emj="retreat", cost=0.0, desc="فرار؛ ریسک ضربه‌ی آخر"),
 }
 for _a in ACTIONS.values():
     _a["emj"] = EMJ.of(_a.get("emj"), "⚔️")
@@ -103,9 +103,9 @@ def start(uid: int, kind: str, *, chat: dict, titan_id: str = None, opp_uid: int
     if not p:
         return dict(ok=False, msg="🔒 /start")
     if PL.is_dead(p):
-        return dict(ok=False, msg=f"☠️ Recovery Mode — {PL.dead_left(p)/60:.1f} دقیقه تا احیا.")
+        return dict(ok=False, msg=f"☠️ حالتِ بازیابی — {PL.dead_left(p)/60:.1f} دقیقه تا احیا.")
     if active_of(uid):
-        return dict(ok=False, msg="⚔️ درگیری فعالی داری — «/fight» برای ادامه یا Retreat.")
+        return dict(ok=False, msg="⚔️ درگیری فعالی داری — «/fight» برای ادامه یا عقب‌نشینی.")
     env = (chat or {}).get("zone") or "ocean"
     if kind in ("boss", "world") and boss:
         d = boss.get("block") or boss          # هم wrapper و هم بلاکِ مستقیم
@@ -115,7 +115,7 @@ def start(uid: int, kind: str, *, chat: dict, titan_id: str = None, opp_uid: int
     elif opp_uid:
         q = PL.get(opp_uid)
         if not q:
-            return dict(ok=False, msg="🔒 حریف در MONARCH ثبت نشده.")
+            return dict(ok=False, msg="🔒 حریف در مانارچ ثبت نشده.")
         if PL.is_dead(q):
             return dict(ok=False, msg="☠️ آن عامل down است — صبر کن احیا شود.")
         d = economy.stats_of(q)
@@ -155,9 +155,9 @@ def start(uid: int, kind: str, *, chat: dict, titan_id: str = None, opp_uid: int
     cid = cur.lastrowid
     st["id"] = cid
     _save(cid, st)
-    label = d.get("name", "UNKNOWN")
-    txt = (f"⚔️ <b>ENGAGEMENT INITIATED</b>\n"
-           f"🛰 پرونده <code>MCX-{cid:05d}</code> · 🌍 {TN.ENVS.get(env, env)}\n"
+    label = d.get("name", "ناشناخته")
+    txt = (f"⚔️ <b>درگیری آغاز شد</b>\n"
+           f"🛰 <code>پروندۀ {cid:05d}</code> · 🌍 {TN.ENVS.get(env, env)}\n"
            f"🆚 <b>{label}</b>"
            + (f" · <code>{TN.RARITY.get(d.get('rar') or '', {}).get('cls', '')}</code>" if d.get("rar") else ""))
     return dict(ok=True, cid=cid, state=st, msg=txt + "\n" + _quick_view(st), keyboard=True)
@@ -167,9 +167,9 @@ def _hunt_gate(p: dict, t: dict) -> dict:
     """شکار داوطلبانه: رتبه + پیوندِ لازم — تا Legendary بی‌آمادگی باز نیست."""
     need = balance.GATE.get(t["rar"], balance.GATE["RARE"])["rank"]
     if int(p.get("rank") or 1) < need:
-        return dict(ok=False, msg=(f"🔒 <b>ACCESS DENIED</b> — شکار {t['name']}\n"
+        return dict(ok=False, msg=(f"🔒 <b>دسترسی رد شد</b> — شکار {t['name']}\n"
                                    f"رتبه‌ی لازم: <b>{need}</b> · رتبه‌ی تو: {int(p.get('rank') or 1)}\n"
-                                   f"<i>MONARCH اجازه‌ی خودکشی میدانی نمی‌دهد. Research/Expedition را ادامه بده.</i>"))
+                                   f"<i>مانارچ اجازه‌ی خودکشی میدانی نمی‌دهد. Research/کاوش را ادامه بده.</i>"))
     return dict(ok=True)
 
 
@@ -205,7 +205,7 @@ def act(cid: int, uid: int, action: str, arg=None) -> dict:
         return dict(ok=False, msg="⌛ نبرد به‌دلیل بی‌فعالی بسته شد (تلفات: هیچ). «/hunt» دوباره.")
     cd = config.COMBAT_ACTION_CD
     if now() - float(st.get("acted") or 0) < cd:
-        return dict(ok=False, msg=f"⏳ {cd - (now() - st['acted']):.0f}s — MONARCH Feed را آرام نگه می‌دارد.")
+        return dict(ok=False, msg=f"⏳ {cd - (now() - st['acted']):.0f} ثانیه — نوبت بعدی همین‌قدر فاصله لازم دارد.")
     st["acted"] = now()
     primary = int(row["a_id"]) == int(uid)
     unit = st["a"] if primary else (st.get("al") or {}).get(str(uid))
@@ -299,7 +299,7 @@ def act(cid: int, uid: int, action: str, arg=None) -> dict:
         else:
             if random.random() < 0.34 + min(0.24, float(unit.get("acc") or 0.7) * 0.22):
                 balance.add_status(d, "stun", 1, 0)
-                notes.append("🎯 <b>INTERRUPT</b> — حرکت حریف را خواندی")
+                notes.append("🎯 <b>وقفه</b> — حرکت حریف را خواندی")
                 mult = 0.55
             else:
                 unit["exposed"] = 1
@@ -318,7 +318,7 @@ def act(cid: int, uid: int, action: str, arg=None) -> dict:
         unit["charge"] = 0.0
         balance.add_status(unit, "focus", 2, 0)
         balance.add_status(unit, "accup", 2, 0)
-        notes.append("☢️ <b>OVERDRIVE</b> — تمرکز کامل ۲ نوبت")
+        notes.append("☢️ <b>بیش‌ران</b> — تمرکز کامل ۲ نوبت")
         mult = 1.15
     elif ability:
         mult = float(ability.get("power") or 1.0)
@@ -391,7 +391,7 @@ def _bond_of(uid: int, tid: str) -> int:
 
 
 def _apply_effects(caster: dict, target: dict, ability: dict, res: dict, st: dict, lines: list):
-    """افکت‌های Ability (وضعیت/شارژ/مکمل) — یک مسیر برای بازیکن و تایتان."""
+    """افکت‌های مهارت (وضعیت/شارژ/مکمل) — یک مسیر برای بازیکن و تایتان."""
     eff = (ability or {}).get("eff") or {}
     if not eff:
         return
@@ -441,7 +441,7 @@ def _apply_effects(caster: dict, target: dict, ability: dict, res: dict, st: dic
         if caster["heat"] >= 100:
             caster["heat"] = 20.0
             balance.add_status(caster, "stun", 2, 0)
-            lines.append(f"   ↳ 🌡 <b>OVERHEAT</b> — هسته قفل شد (۲ نوبت)")
+            lines.append(f"   ↳ 🌡 <b>داغی بیش‌ازحد</b> — هسته قفل شد (۲ نوبت)")
     if eff.get("env"):
         st["env"] = eff["env"]
         lines.append(f"   ↳ 🌍 محیط به {TN.ENVS.get(eff['env'], eff['env'])} تغییر کرد")
@@ -510,9 +510,9 @@ def _retreat(cid: int, st: dict, unit: dict, d: dict, row, uid: int) -> dict:
         PL.set_row(uid, flees=int(PL.get(uid).get("flees") or 0) + 1)
         PL.spend(uid, credits=-round(0.05 * float(PL.get(uid).get("credits") or 0), 0))
         close(cid, "fled")
-        return dict(ok=True, ended=True, text=(f"💨 <b>TACTICAL WITHDRAWAL</b>\n"
+        return dict(ok=True, ended=True, text=(f"💨 <b>عقب‌نشینی تاکتیکی</b>\n"
                                               f"از {d.get('name')} فاصله گرفتی؛ ۵٪ اعتبار در فرار ریخت.\n"
-                                              f"🛰 MONARCH قضاوت نمی‌کند — زنده بمان."))
+                                              f"🛰 مانارچ قضاوت نمی‌کند — زنده بمان."))
     hit = balance.resolve_strike(d, unit, mult=1.25, env=st.get("env"))
     unit["hp"] = round(float(unit["hp"]) - hit["dmg"], 2)
     lines = [f"🚫 فرار شکست خورد — {d.get('name')} پشتِ تو را باز دید · <b>−{hit['dmg']:.1f}</b>"]
@@ -602,7 +602,7 @@ def _enemy_turn(st: dict, unit: dict, notes: list) -> list:
         if r["blocked"] and int(target.get("counter_window") or 0) > 0:
             rp = balance.resolve_strike(target, d, mult=1.0, is_counter=True, env=st.get("env"))
             d["hp"] = round(float(d["hp"]) - rp["dmg"], 2)
-            lines.append(f"🎯 <b>COUNTER</b> — {target['name']} پاسخ داد · <b>{rp['dmg']:.1f}</b>")
+            lines.append(f"🎯 <b>ضدحمله</b> — {target['name']} پاسخ داد · <b>{rp['dmg']:.1f}</b>")
             _credit(st, int(target.get("uid") or 0), "dmg", rp["dmg"])
         if target.get("guarded"):
             _credit(st, int(target.get("uid") or 0), "guard", r["dmg"])
@@ -642,14 +642,14 @@ def _enemy_phase(st: dict, lines: list) -> list:
     if not d.get("rage") and now() > float(boss.get("rage_at") or 1e18):
         d["rage"] = 1
         d["atk"] = round(float(d["atk"]) * 1.28, 2)
-        lines.append(f"😡 <b>RAGE MODE</b> — {d.get('name')} دیگر مذاکره نمی‌کند (+۲۸٪ آسیب)")
+        lines.append(f"😡 <b>حالت خشم</b> — {d.get('name')} دیگر مذاکره نمی‌کند (+۲۸٪ آسیب)")
     # حمله‌ی ویژه: پنجره‌ی پاسخ
     if int(st.get("turn") or 1) % 4 == 0 and not st.get("special"):
         sp = random.choice(boss.get("specials") or [])
         if sp:
             st["special"] = dict(name=sp["name"], counter=sp["counter"], mult=sp.get("mult", 1.8),
                                  emj=sp.get("emj", "warning"), turn=st.get("turn"))
-            lines.append(f"{sp.get('emj', '🚨')} <b>INCOMING — {sp['name']}</b> · "
+            lines.append(f"{sp.get('emj', '🚨')} <b>⚠️ حملۀ نزدیک — {sp['name']}</b> · "
                          f"پاسخ لازم: <b>{ACTIONS.get(sp['counter'], {}).get('emj', '')} "
                          f"{ACTIONS.get(sp['counter'], {}).get('name', '')}</b>")
     elif st.get("special"):
@@ -661,7 +661,7 @@ def _enemy_phase(st: dict, lines: list) -> list:
         if good:
             d["hp"] = round(float(d["hp"]) - float(d["max_hp"]) * 0.05, 2)
             st["a"]["charge"] = min(config.CHARGE_MAX, float(st["a"].get("charge") or 0) + 30)
-            lines.append(f"✅ <b>DEFLECTED</b> — {sp['name']} خنثی شد · ☢️ +۳۰ شارژ · −۵٪ HP باس")
+            lines.append(f"✅ <b>منحرف شد</b> — {sp['name']} خنثی شد · ☢️ +۳۰ شارژ · −۵٪ HP باس")
         else:
             r = balance.resolve_strike(d, st["a"], mult=sp["mult"], env=None)
             st["a"]["hp"] = round(float(st["a"]["hp"]) - r["dmg"] * 1.3, 2)
@@ -706,9 +706,9 @@ def _victory(cid: int, st: dict, row, uid: int, lines: list) -> dict:
             division.credit_activity(int(u["uid"]), "hunt_win", 1)
     except Exception:
         pass
-    head = (f"🏆 <b>TARGET NEUTRALIZED</b> — {d.get('name')}\n"
+    head = (f"🏆 <b>هدف از بین رفت</b> — {d.get('name')}\n"
             + " · ".join(f"{e} {v:g}" for e, v in _iconize(pay))
-            + (f"\n🎖 <b>FIRST KILL</b> — پرونده‌ی {t.get('name', '')} باز شد" if first else "")
+            + (f"\n🎖 <b>اولین شکار</b> — پرونده‌ی {t.get('name', '')} باز شد" if first else "")
             + (f"\n🅿️ {div_txt}" if div_txt else ""))
     return dict(ok=True, ended=True, text=head, feed=feed(st, lines + [head]), live=False,
                 rewards=pay)
@@ -729,10 +729,10 @@ def _defeat(cid: int, st: dict, row, unit: dict, lines: list) -> dict:
         _writeback(u)
     res = PL.die(uid, st.get("kind") or "combat")
     drop = " · ".join(f"{k} −{v:g}" for k, v in (res.get("drop") or {}).items())
-    txt = (f"☠️ <b>AGENT DOWN</b>\n"
+    txt = (f"☠️ <b>عامل از پا درآمده</b>\n"
            f"Recovery Mode: <b>{config.RECOVERY_MINUTES} دقیقه</b>\n"
            + (f"🩸 Drop: {drop}\n" if drop else "🛡 منابعِ محافظت‌شده باقی ماند\n")
-           + f"❤️ <b>RESPAWN</b> پس از پایان زمان، HP تا {int(config.INJURY_HP*100)}٪ بازسازی می‌شود.")
+           + f"❤️ <b>بازگشت عامل</b> پس از پایان زمان، HP تا {int(config.INJURY_HP*100)}٪ بازسازی می‌شود.")
     PL.track_stat(uid, "losses", 1)
     return dict(ok=False, ended=True, text=txt, feed=feed(st, lines + [txt]), live=False, dead=True)
 
@@ -761,7 +761,7 @@ def _pvp_settle(cid: int, st: dict, row, uid: int, lines: list) -> dict:
         r = arena.settle(win, opp, win_score=1, lose_score=0)
         arena_txt = "\n" + (r.get("msg") or "").split("\n", 1)[-1] if r.get("ok") else ""
     return dict(ok=True, ended=True,
-                text=f"🏆 <b>HOSTILE NEUTRALIZED</b> — {st['d'].get('name')}\n"
+                text=f"🏆 <b>تهدید حذف شد</b> — {st['d'].get('name')}\n"
                      f"🪙 جایزه‌ی میدان <code>+{180 + pool:,.0f}</code> · 🧬 1 · حریف → Medical"
                      + arena_txt,
                 feed=feed(st, lines), live=False, rewards=dict(credits=180 + pool, dna=1))
@@ -776,10 +776,12 @@ def feed(st: dict, lines: list = None) -> str:
 
 
 def _quick_view(st: dict) -> str:
+    """دو خطِ فشرده برای نگاهِ سریع (بدونِ شلوغ‌کردنِ فید)."""
+    import ui
     a, d = st["a"], st["d"]
-    return (f"❤️ {a['hp']:.0f}/{a['max_hp']:.0f} · 🔋 {a['energy']:.0f} · ☢️ {a.get('charge',0):.0f}%\n"
-            f"🆚 {d.get('name')} ❤️ {d['hp']:.0f}/{d['max_hp']:.0f} "
-            f"({int(100 * float(d['hp']) / max(1.0, float(d['max_hp'])))}%)")
+    return (f"🛰 ❤️ {ui.n(a['hp'])}/{ui.n(a['max_hp'])} · 🔋 {ui.n(a['energy'])} · ☢️ {ui.n(a.get('charge', 0))}٪\n"
+            f"🆚 {d.get('name')} ❤️ {ui.n(d['hp'])}/{ui.n(d['max_hp'])} "
+            f"({ui.pct(d['hp'], d['max_hp'])}٪)")
 
 
 def options(cid: int, uid: int) -> list:

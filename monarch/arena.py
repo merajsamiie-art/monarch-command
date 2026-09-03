@@ -1,6 +1,7 @@
 # 🏆 Arena Engine — لدر رتبه‌بندی؛ فصل هفتگی، matchmaking بر اساس rating
 import math
 import random
+import re
 
 import config
 import db
@@ -10,6 +11,12 @@ from db import now
 def season_key() -> str:
     d = db.local_now()
     return f"S{(int(d.strftime('%j')) // config.ARENA_SEASON_DAYS) + 1}-{d.year}"
+
+
+def season_label(key=None) -> str:
+    """برچسبِ فارسیِ فصل؛ کلیدِ دیتابیس (S36-2026) لاتین می‌ماند."""
+    m = re.match(r"S(\d+)-(\d+)", str(key or season_key()))
+    return f"فصلِ {m.group(1)} · {m.group(2)}" if m else f"فصلِ {key or season_key()}"
 
 
 def ensure_season() -> dict:
@@ -59,14 +66,14 @@ def challenge(uid: int, chat: dict, opp_uid: int = None) -> dict:
     if left <= 0:
         return dict(ok=False, msg="🏆 سهمیه‌ی روزانه‌ی آرنا تمام شد (۶ نبرد).")
     if PL.is_dead(p):
-        return dict(ok=False, msg="☠️ عامل در Recovery Mode است.")
+        return dict(ok=False, msg="☠️ عامل در حالت بازیابی است.")
     if not opp_uid:
         fm = find_match(uid)
         if not fm.get("ok"):
             return fm
         opp_uid = int(fm["opp"]["user_id"])
     if int(opp_uid) == int(uid):
-        return dict(ok=False, msg="🚫 دوئل با خود؟ MONARCH رد می‌کند.")
+        return dict(ok=False, msg="🚫 دوئل با خود؟ مانارچ رد می‌کند.")
     o = PL.get(opp_uid)
     if not o:
         return dict(ok=False, msg="🔒 حریف ثبت‌شده نیست.")
@@ -122,7 +129,7 @@ def settle(win_uid: int, lose_uid: int, win_score: int = 1, lose_score: int = 0)
     PL.add_res(win_uid, credits=round(240 + new_w * 0.35, 0), fdata=1)
     PL.add_xp(win_uid, 16)
     return dict(ok=True, win=new_w, lose=new_l, tier=tier,
-                msg=f"🏆 <b>RATING UPDATED</b>\n🟢 {PL.name_of(win_uid)}: {rw:.0f} → <b>{new_w:.0f}</b>\n"
+                msg=f"🏆 <b>رتبه به‌روز شد</b>\n🟢 {PL.name_of(win_uid)}: {rw:.0f} → <b>{new_w:.0f}</b>\n"
                     f"🔴 {PL.name_of(lose_uid)}: {rl:.0f} → <b>{new_l:.0f}</b>\n"
                     f"🎖 رده‌ی آرنا: <b>{tier['name']}</b>")
 
@@ -134,12 +141,12 @@ def tier_of(rating: float) -> dict:
     return TIERS[0]
 
 
-TIERS = [dict(key="unranked", name="Unranked", emj="⚪", min=0),
-         dict(key="bronze", name="Bronze Clearance", emj="🥉", min=1000),
-         dict(key="silver", name="Silver Clearance", emj="🥈", min=1150),
-         dict(key="gold", name="Gold Clearance", emj="🥇", min=1320),
-         dict(key="platinum", name="Alpha Clearance", emj="💠", min=1500),
-         dict(key="monarch", name="MONARCH Class", emj="👑", min=1700)]
+TIERS = [dict(key="unranked", name="بدونِ رتبه", emj="⚪", min=0),
+         dict(key="bronze", name="مجوز برنز", emj="🥉", min=1000),
+         dict(key="silver", name="مجوز نقره", emj="🥈", min=1150),
+         dict(key="gold", name="مجوز طلا", emj="🥇", min=1320),
+         dict(key="platinum", name="مجوز آلفا", emj="💠", min=1500),
+         dict(key="monarch", name="طبقۀ مانارچ", emj="👑", min=1700)]
 
 
 def ladder(limit: int = 10) -> list:
@@ -151,16 +158,18 @@ def board_text(uid: int = None) -> str:
     ensure_season()
     rows = ladder(10)
     st = db.db().getv("arena_season", {}) or {}
-    lines = [f"🏆 <b>ARENA LADDER</b> · <code>{st.get('season','—')}</code>",
-             (f"<i>سهمیه‌ی امروز تو: {arena_left(int(uid))}/{config.ARENA_DAILY}</i>" if uid else
-              f"<i>سهمیه‌ی روزانه‌ی هر عامل: {config.ARENA_DAILY} نبرد</i>"), ""]
+    lines = [(f"<i>سهمیۀ امروزِ تو: {arena_left(int(uid))}/{config.ARENA_DAILY}</i>" if uid else
+              f"<i>سهمیۀ روزانۀ هر عامل: {config.ARENA_DAILY} نبرد</i>"), ""]
     for i, r in enumerate(rows, 1):
         t = tier_of(float(r.get("arena_rating") or 1000))
-        lines.append(f"{i}. {t['emj']} <b>{r['name']}</b> · <code>{float(r['arena_rating']):.0f}</code> "
-                     f"<i>{int(r.get('arena_wins') or 0)}W/{int(r.get('arena_losses') or 0)}L</i>")
+        lines.append(f"{i}. {t['emj']} <b>{r['name']}</b> · <code>{float(r['arena_rating']):.0f}</code> · "
+                     f"<i>{int(r.get('arena_wins') or 0)} بُرد، {int(r.get('arena_losses') or 0)} باخت</i>")
     if not rows:
-        lines.append("<i>لدر خالی است — «/duel» اولین دوئل را ثبت می‌کند.</i>")
-    return "\n".join(lines)
+        lines.append("<i>نردبان خالی است — «/duel» نخستین دوئل را ثبت می‌کند.</i>")
+    import ui
+    return ui.card(f"نردبان آرنا", lines, sub=season_label(st.get("season")),
+                   stamp="رزمی", code=abs(hash(str(st.get("season")))) % 90000 + 1000,
+                   note="رتبه فقط با بُرد بالا می‌رود.")
 
 
 def settle_season(st: dict):

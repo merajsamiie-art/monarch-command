@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 log = logging.getLogger("monarch")
 
 COMMANDS = [
-    ("start", "شروع / ورود به MONARCH"),
+    ("start", "شروع / ورود به مانارچ"),
     ("me", "کارت عامل و وضعیت"),
     ("codex", "دیتابیس تایتان‌ها"),
     ("dossier", "پرونده‌ی کامل یک تایتان"),
@@ -37,17 +37,17 @@ COMMANDS = [
     ("explore", "اعزام تیم کاوش"),
     ("arena", "آرنای رتبه‌ای"),
     ("duel", "دوئل با عامل دیگر"),
-    ("puzzle", "رمزنگاری MONARCH"),
-    ("shop", "فروشگاه MONARCH"),
+    ("puzzle", "رمزنگاری مانارچ"),
+    ("shop", "فروشگاه مانارچ"),
     ("inv", "کوله و تجهیزات"),
     ("equip", "مجهزکردن تجهیز"),
     ("upgrade", "ارتقای تجهیز"),
     ("market", "بازار منابع"),
     ("sell", "فروش منبع"),
-    ("vault", "خزنه‌ی Division"),
+    ("vault", "خزنه‌ی سازمان"),
     ("missions", "مأموریت‌های روزانه"),
     ("daily", "حضور روزانه"),
-    ("div", "Division: ساخت / تسهیلات / جنگ"),
+    ("div", "سازمان: ساخت / تسهیلات / جنگ"),
     ("bounty", "گرفتن جایزه برای سر یک عامل"),
     ("top", "رنکینگ"),
     ("clearance", "الزامات رتبه و دروازه‌ها"),
@@ -63,13 +63,13 @@ async def bootstrap_meta(bot: Bot):
         await bot.set_my_commands([(c, d) for c, d in COMMANDS])
         await bot.set_my_commands([], scope=None)
         await bot.set_my_description(
-            "🛰 MONARCH COMMAND — MMORPG گروهیِ دنیای Kaiju.\n"
+            "🛰 مانارچ COMMAND — MMORPG گروهیِ دنیای Kaiju.\n"
             "همه با صفر شروع می‌کنند: ردیابی کن، نمونه بگیر، تحلیل کن، شکار کن، "
-            "باس بزن، Division بساز و روزی با Godzilla روبه‌رو شو.\n"
+            "باس بزن، سازمان بساز و روزی با Godzilla روبه‌رو شو.\n"
             "🦖 THE TITANS ARE ALREADY HERE.")
         await bot.set_my_short_description(
             "☢️ MMORPG تایتان‌ها در تلگرام · ۲۴/۷ زنده · بدون Pay-to-Win")
-        await bot.set_my_name("MONARCH COMMAND")
+        await bot.set_my_name("فرماندهی مانارچ")
     except Exception:
         log.exception("meta update failed")
 

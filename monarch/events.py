@@ -101,7 +101,7 @@ def cycle_raid():
 
 
 def cycle_division_war():
-    """جنگ Division: پنجشنبه ۲۰:۰۰ شروع، ۲۴ ساعت مهلت تخصیص."""
+    """جنگ سازمان: پنجشنبه ۲۰:۰۰ شروع، ۲۴ ساعت مهلت تخصیص."""
     w = db.db().getv("war_state", {}) or {}
     if w.get("status") == "open" and float(w.get("ends_at", 0)) <= now():
         res = __import__("division").war_resolve()
@@ -150,14 +150,14 @@ def news_packet(chat: dict) -> str:
     zone = chat.get("zone") or "ocean"
     st = RA.state()
     act = bosses.active(chat["chat_id"])
-    lines = [f"{E('radar')} <b>MONARCH DAILY FEED</b> · {TN.ENVS.get(zone, zone)}",
+    lines = [f"{E('radar')} <b>گزارش روزانه مانارچ</b> · {TN.ENVS.get(zone, zone)}",
              f"▪️ خطر منطقه: <code>{'▰' * int(chat.get('danger') or 1)}{'▱' * (5 - int(chat.get('danger') or 1))}</code>"]
     if act:
         b = bosses.by_id(act["bid"])
         lines.append(f"🕹 تهدید فعال: <b>{b.get('name')}</b> · {ui.bar(act['state'].get('hp', 0), act['state'].get('max_hp', 1))} "
                      f"⏱ {ui.eta(float(chat.get('boss_until') or 0))}")
     if st and not st.get("over"):
-        lines.append(f"🌒 <b>WORLD RAID</b> — {st.get('name')} · HP {int(100 * float(st['hp']) / max(1.0, float(st['max_hp'])))}% · «/raid»")
+        lines.append(f"🌒 <b>یورش جهانی</b> — {st.get('name')} · HP {int(100 * float(st['hp']) / max(1.0, float(st['max_hp'])))}% · «/raid»")
     sig = random.choice(list(TN.TITANS.values()))
     if random.random() < 0.6:
         lines.append(f"📶 سیگنال تازه در {TN.ENVS.get(random.choice(list(TN.ENVS.keys())), '')} — «/track»")
@@ -171,11 +171,11 @@ def news_packet(chat: dict) -> str:
 LORE_LINES = [
     "هر تایتان یک پرونده است؛ هر پرونده یک هشدار.",
     "سکوت لرزه‌ای بدترین خبر است — یعنی نفس می‌کشد.",
-    "MONARCH نمی‌جنگد تا مطمئن نشود؛ بعد هم دیگر عقب نمی‌نشیند.",
+    "مانارچ نمی‌جنگد تا مطمئن نشود؛ بعد هم دیگر عقب نمی‌نشیند.",
     "ضربه‌ی اتمی یک انتخاب است، نه یک عادت.",
     "آن‌ها از قبل اینجا بودند؛ ما تازه متوجه شدیم.",
     "تجهیزات تو را زنده نگه می‌دارد؛ پیوند تایتان تو را فرمانده می‌کند.",
-    "هیچ غنیمتی رایگان نیست — ۱۰ دقیقه Recovery بهایش است.",
+    "هیچ غنیمتی رایگان نیست — ۱۰ دقیقه بازیابی بهایش است.",
     "خاکسترِ یک تایتان، داده‌ی تایتان بعدی است.",
 ]
 
@@ -195,7 +195,7 @@ def cycle_channel(bot):
         i = int(now() // 86400) % len(texts.LESSONS)
         lesson = texts.LESSONS[i]
         _dispatch(bot, config.CHANNEL_ID,
-                  f"📖 <b>MONARCH MANUAL · درس {i+1:02d}</b>\n\n{lesson['title']}\n\n{lesson['body']}\n\n"
+                  f"📖 <b>مانارچ MANUAL · درس {i+1:02d}</b>\n\n{lesson['title']}\n\n{lesson['body']}\n\n"
                   f"<i>🛰 {config.BRAND} — {config.CHANNEL_URL}</i>")
     if db.weekday_local() == config.RANK_DAY and hh == config.RANK_HOUR \
             and not d.getv(f"rank:{db.local_day()}"):
@@ -206,11 +206,11 @@ def cycle_channel(bot):
         bid = bosses.pick(random.choice(list(TN.ENVS.keys())), random.randint(2, 4))
         b = bosses.by_id(bid)
         _dispatch(bot, config.CHANNEL_ID,
-                  f"👑 <b>BOSS NEWS</b>\n\n"
-                  f"🚨 MONARCH ALERT — SEISMIC ACTIVITY DETECTED.\n\n"
-                  f"🦖 TITAN: <b>{b['name']}</b>\n"
-                  f"📍 LOCATION: {TN.ENVS.get((b.get('zones') or ['city'])[0], '—')}\n"
-                  f"☢️ THREAT: <b>{'CRITICAL' if b['tier'] in ('LEGENDARY','ALPHA','WORLD') else 'SEVERE'}</b>\n\n"
+                  f"👑 <b>خبر باس</b>\n\n"
+                  f"🚨 <b>هشدارِ سراسری مانارچ</b> — فعالیتِ لرزه‌ای ثبت شد\n\n"
+                  f"🦖 تایتان: <b>{b['name']}</b>\n"
+                  f"📍 مکان: {TN.ENVS.get((b.get('zones') or ['city'])[0], '—')}\n"
+                  f"☢️ سطحِ تهدید: <b>{'بحرانی' if b['tier'] in ('LEGENDARY','ALPHA','WORLD') else 'شدید'}</b>\n\n"
                   f"<i>{b.get('lore','')}</i>\n\n"
                   f"▸ در گروه: <code>/boss</code> · <code>/raid join</code>")
 
@@ -219,7 +219,7 @@ def ranking_post() -> str:
     import player as PL
     import ui
     rows = PL.leaderboard("power", 12)
-    lines = ["🏆 <b>ALPHA PROTOCOL — رنکینگ هفتگی</b>",
+    lines = ["🏆 <b>برنامۀ آلفا — رتبۀ هفتگی</b>",
              "<i>قدرت = نبرد + تحقیق + پیوند؛ رتبه با پول نمی‌خرد.</i>", ""]
     medals = ["🥇", "🥈", "🥉"]
     for i, r in enumerate(rows, 1):
@@ -227,14 +227,14 @@ def ranking_post() -> str:
                      f"· <code>R{r.get('rank')}</code> · {ui.n(r.get('v'))}")
     dr = __import__("division").top(5)
     if dr:
-        lines += ["", "🏢 <b>DIVISIONS</b>"]
+        lines += ["", "🏢 <b>سازمان‌ها</b>"]
         for i, d in enumerate(dr, 1):
             lines.append(f"{i}. {d['name']} <code>[{d['tag']}]</code> · L{d['level']} · "
                          f"{int(d['wins'])}W")
     import research
     rr = research.discovery_ranking(5)
     if rr:
-        lines += ["", "🔬 <b>BEST RESEARCHERS</b>"]
+        lines += ["", "🔬 <b>برترین پژوهشگران</b>"]
         for row in rr:
             lines.append(f"▪️ {PL.name_of(int(row['user_id']))} — {int(row['c'])} پرونده‌ی باز‌شده")
     lines += ["", f"<i>🛰 {config.BRAND} · {config.GROUP_URL}</i>"]
@@ -301,7 +301,7 @@ class Engine:
                     for res in bosses.decay():
                         msg = (res.get("settled") or {}).get("msg")
                         if msg:
-                            _dispatch(self.bot, res["chat_id"], f"🕹 <b>OPERATION UPDATE</b>\n{msg}")
+                            _dispatch(self.bot, res["chat_id"], f"🕹 <b>به‌روزرسانیِ عملیات</b>\n{msg}")
             except asyncio.CancelledError:
                 break
             except Exception:

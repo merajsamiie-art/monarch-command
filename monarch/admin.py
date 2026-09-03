@@ -30,7 +30,7 @@ def is_admin(uid: int) -> bool:
 
 async def a(m: Message) -> bool:
     if not is_admin(m.from_user.id):
-        await m.answer("🔒 <b>ACCESS DENIED</b>\n<code>MONARCH SECURITY</code> — این پرونده برای تو نیست.")
+        await m.answer("🔒 <b>دسترسی رد شد</b>\n<code>مانارچ SECURITY</code> — این پرونده برای تو نیست.")
         return False
     return True
 
@@ -51,12 +51,12 @@ async def panel(m: Message):
     txt = (f"🛡 <b>MONARCH COMMAND — CONTROL</b>\n▬▬▬▬▬▬▬▬▬▬▬▬\n"
            f"▪️ بازیکنان: <b>{stats['players']}</b> · چت‌های فعال: <b>{stats['chats']}</b>\n"
            f"▪️ نبردهای زنده: <b>{stats['live']}</b> · پیوندهای فعال: <b>{stats['bonds']}</b>\n"
-           f"▪️ Division‌ها: <b>{stats['divs']}</b> · ریدها: <b>{stats['raids']}</b>\n"
+           f"▪️ سازمان‌ها: <b>{stats['divs']}</b> · ریدها: <b>{stats['raids']}</b>\n"
            f"▪️ ساعت: {db.local_now().strftime('%H:%M')} تهران · چهارشنبه/جمعه رید\n"
            f"▪️ تعادل: {len(balance.CAL or {})}/{len(TN.TITANS)} تایتان کالیبره\n"
            f"▪️ ایموجی سفارشی: {'✅ فعال' if EMJ.has_custom() else '⬪ یونیکد'}")
     rows = [[("adm:spawn", "🕹 اسپاون باس"), ("adm:zone", "🌍 منطقه")],
-            [("adm:raid", "🌒 شروع رید"), ("adm:war", "⚔️ جنگ Division")],
+            [("adm:raid", "🌒 شروع رید"), ("adm:war", "⚔️ جنگ سازمان")],
             [("adm:audit", "⚖️ ممیزی تعادل"), ("adm:news", "📰 فید گروه‌ها")],
             [("adm:bcast", "📢 پخش کانال"), ("adm:wipe", "🧹 بسته‌نبرد ها")]]
     await m.answer(txt, reply_markup=kb.kb(rows))
@@ -90,16 +90,16 @@ async def cb(c: CallbackQuery):
         divs = db.db().q("SELECT id FROM divisions ORDER BY xp DESC LIMIT 4")
         pairs = [dict(a=divs[i]["id"], b=divs[i + 1]["id"], focus={}) for i in range(0, len(divs) - 1, 2)]
         division.war_start(pairs, hours=6) if pairs else None
-        await c.answer(f"جنگ با {len(pairs)} جفت شروع شد" if pairs else "Division کافی نیست", show_alert=True)
+        await c.answer(f"جنگ با {len(pairs)} جفت شروع شد" if pairs else "سازمان کافی نیست", show_alert=True)
     elif key == "audit":
         r = balance.audit(trials=18)
-        lines = [f"⚖️ <b>BALANCE AUDIT</b> · span {r['span']}× · {r['calibrated']}/{r['n']} کالیبره",
+        lines = [f"⚖️ <b>ممیزی تعادل</b> · span {r['span']}× · {r['calibrated']}/{r['n']} کالیبره",
                  ui.divider()]
         for row in r["rows"][:14]:
             lines.append(f"▪️ {row['name'][:16]:<17}{row['rar'][:9]:<10} "
                          f"smart <code>{row['smart']:.2f}</code> spam <code>{row['spam']:.2f}</code> "
                          f"under <code>{row['underleveled']:.2f}</code>")
-        lines += ["", "<b>PROBLEMS</b>: " + ("<i>none</i>" if not r["problems"] else "")]
+        lines += ["", "<b>مشکل</b>: " + ("<i>none</i>" if not r["problems"] else "")]
         lines += [f"▪️ {p}" for p in r["problems"][:12]]
         try:
             await c.message.edit_text("\n".join(lines)[:3900])
