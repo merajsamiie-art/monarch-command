@@ -48,6 +48,8 @@ jobs:
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
           CHANNEL_URL: ${{ secrets.CHANNEL_URL }}
           GROUP_URL: ${{ secrets.GROUP_URL }}
+          GROUP_ID: ${{ vars.GROUP_ID }}
+          MIN_MEMBERS: ${{ vars.MIN_MEMBERS }}
           MC_DB_PATH: ${{ github.workspace }}/monarch.db
         run: |
           git config user.name "monarch-bot"

@@ -11,6 +11,7 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardButton as B, Message
 
 import abilities as AB
+import access as GATE
 import arena
 import balance
 import bosses
@@ -19,6 +20,7 @@ import config
 import db
 import division
 import economy
+import emoji as EMJ
 import events
 import expedition
 import kb
@@ -47,6 +49,8 @@ ALIASES = {
     "scan": ["اسکن", "منطقه"], "bounty": ["جایزه", "bod"],
     "help": ["راهنما", "commands"], "rules": ["قوانین"], "clearance": ["رتبه"],
     "use": ["مصرف"], "upgrade": ["ارتقا"],
+    "menu": ["منو", "تابلو", "board", "پنل"],
+    "setmain": ["گروه اصلی", "اصلی", "main"],
 }
 
 _MEM_CACHE = {}          # uid -> (ok, ts)
@@ -180,6 +184,38 @@ def spam_ok(uid: int) -> tuple:
 _SPAM_WARN = {}          # uid -> ts : فقط یک هشدار در هر دقیقه (ضداسپمِ خودِ ربات)
 
 
+def _key_of(m) -> str:
+    """نامِ دستورِ داخلِ پیام (برای اینکه بدانیم درِ پیوی به چه باز است)."""
+    t = (getattr(m, "text", "") or "").strip()
+    if not t:
+        return ""
+    if t.startswith("/"):
+        return t[1:].split(maxsplit=1)[0].split("@")[0].lower()
+    if t.startswith(config.PREFIX):
+        body = t[len(config.PREFIX):].strip()
+        return body.split(maxsplit=1)[0].lower() if body else ""
+    return ""
+
+
+async def access_ok(m, key: str = "") -> bool:
+    """دروازۀ «بازی فقط در گروه». اگر بسته باشد کارتِ دروازہ را می‌فرستد.
+
+    در پیوی تنها `PV_ALLOW` می‌گذرد؛ گروه‌های خلوت زیرِ ``config.MIN_MEMBERS``
+    قفله‌اند و گروهِ اصلی (``GROUP_ID`` یا ``/setmain``) آزاد است.
+    هر کاربر/چت برای هر دلیل، حداکثر یک اخطار در ۱۵ دقیقه می‌گیرد.
+    """
+    uid = int(getattr(getattr(m, "from_user", None), "id", 0) or 0)
+    ok, why, n = await GATE.verdict(m.bot, m.chat, uid)
+    if ok:
+        return True
+    if why == "pv" and str(key or "").lower().strip() in GATE.PV_ALLOW:
+        return True
+    if not GATE.may_notify(uid, m.chat.id, why):
+        return False
+    await reply(m, GATE.text_for(why, name=name_of(m), count=int(n or 0)), GATE.kb_for(why))
+    return False
+
+
 async def gate(m: Message, admin_ok: bool = True) -> bool:
     uid = m.from_user.id
     ok, wait = spam_ok(uid)
@@ -223,6 +259,9 @@ async def cmd_start(m: Message, command: CommandObject = None):
                                f"🪙 +۱۵۰ اعتبار · 📡 +۱ داده")
         except (ValueError, IndexError):
             pass
+    if GATE.is_private(m.chat):
+        await reply(m, GATE.pv_text(name_of(m)), GATE.kb_for("pv"))
+        return
     if not fresh:
         act = combat.active_of(uid)
         await reply(m, f"🛰 <b>بازگشت خوش‌آمد</b> — {p['name']}\n"
@@ -250,6 +289,40 @@ async def cmd_rules(m: Message):
 async def cmd_join(m: Message):
     await reply(m, f"👥 <b>گروه عملیات مانارچ</b>\n{config.GROUP_URL}\n\n"
                    f"📢 <b>کانال آموزشی</b>\n{config.CHANNEL_URL}")
+
+
+@router.message(Command("menu"))
+async def cmd_menu(m: Message, command: CommandObject = None):
+    """تابلوی فرماندهی — همان منویِ دکمه‌ها، با یک نگاه."""
+    p = guard(m)
+    if not p:
+        return
+    act = combat.active_of(m.from_user.id)
+    st = RA.state()
+    head = (f"🛰 <b>{config.BRAND}</b> — {p.get('name')}\n"
+            f"🎖 {PL.rank_label(p)} {ui.DOT} ❤️ {ui.n(p['hp'])}/{ui.n(p['max_hp'])} "
+            f"{ui.DOT} 🔋 {ui.n(p['energy'])}\n"
+            + (f"⚔️ <b>درگیری فعال</b> — <code>/fight</code>\n" if act else "")
+            + (f"🌍 <b>یورش جهانی:</b> {st.get('name')} — <code>/raid</code>\n" if st and not st.get('over') else "")
+            + f"🔬 پرونده‌های باز: <b>{len(research.known_rows(m.from_user.id))}</b> "
+              f"از {len(TN.TITANS)}")
+    await reply(m, head, kb.main_menu(p, has_combat=bool(act)))
+
+
+@router.message(Command("setmain"))
+async def cmd_setmain(m: Message, command: CommandObject = None):
+    """این گروه را «گروهِ اصلی» کن: بدونِ سقفِ عضو فعال می‌ماند."""
+    if GATE.is_private(m.chat):
+        await reply(m, "🚪 این دستور باید داخلِ همان گروه فرستاده شود.")
+        return
+    if not config.is_admin(m.from_user.id):
+        await reply(m, "⛔️ ثبتِ گروهِ اصلی فقط با مجوزِ فرماندهٔ مانارچ.")
+        return
+    off = _args(command).strip().lower() in ("off", "خاموش", "بردار", " حذف")
+    GATE.mark_main(m.chat.id, not off)
+    GATE.forget(m.chat.id)
+    await reply(m, f"{'✅' if not off else '🔒'} «{m.chat.title}» "
+                   f"{'از این پس بدونِ سقفِ عضو فعال است.' if not off else 'از فهرستِ گروه‌های اصلی درآمد.'}")
 
 
 # ═══════════════ پرونده و پیشرفت ═══════════════
@@ -736,6 +809,18 @@ async def cmd_scan(m: Message):
 
 
 # ═══════════════ رید جهانی ═══════════════
+def _raid_kb():
+    """دکمه‌های یورش — نام و هزینه از خودِ raid.ACTIONS (هیچ متنِ لاتینی نمی‌ماند)."""
+    keys = list(RA.ACTIONS)
+    rows = []
+    for i in range(0, len(keys), 2):
+        rows.append([(f"ra:{k}", f"{EMJ.of(RA.ACTIONS[k]['emj'], '▸')} {RA.ACTIONS[k]['name']}"
+                                  f" · {ui.n(RA.ACTIONS[k].get('cost') or 0)}")
+                     for k in keys[i:i + 2]])
+    rows.append([("ra:join", "🛰 پیوستن"), ("menu:main", "🛰 منو")])
+    return kb.kb(rows)
+
+
 @router.message(Command("raid"))
 async def cmd_raid(m: Message, command: CommandObject = None):
     guard(m)
@@ -751,11 +836,7 @@ async def cmd_raid(m: Message, command: CommandObject = None):
     if args == "board":
         await reply(m, RA.board())
         return
-    await reply(m, RA.board(),
-                kb.kb([[("ra:strike", "⚔️ Strike"), ("ra:focus", "💥 Focus")],
-                       [("ra:shield", "🛡 Shield"), ("ra:repair", "🩹 Repair")],
-                       [("ra:analyze", "🔬 Analyze"), ("ra:regroup", "🔋 Regroup")],
-                       [("ra:join", "🛰 پیوستن"), ("menu:main", "🛰 منو")]]))
+    await reply(m, RA.board(), _raid_kb())
 
 
 @router.callback_query(F.data.startswith("ra:"))
@@ -767,12 +848,12 @@ async def cb_raid(c: CallbackQuery):
         await c.answer((r.get("msg") or "")[:180], show_alert=True)
         return
     r = RA.act(c.from_user.id, key)
-    txt = r.get("msg") or RA.board()
-    try:
-        await c.message.edit_text(f'{txt}\n\n▬▬▬▬▬▬▬▬▬▬▬▬\n' + RA.board(), reply_markup=kb.kb([[('ra:strike', '⚔️ Strike'), ('ra:focus', '💥 Focus')], [('ra:shield', '🛡 Shield'), ('ra:repair', '🩹 Repair')], [('ra:analyze', '🔬 Analyze'), ('ra:regroup', '🔋 Regroup')]]))
+    toast = re.sub(r"<[^>]+>", "", r.get("msg") or "")[:190]
+    try:                                       # یک پیام، همیشه تازه‌سازی — گروه شلوغ نمی‌شود
+        await c.message.edit_text(RA.board(), reply_markup=_raid_kb())
     except TelegramBadRequest:
         pass
-    await c.answer()
+    await c.answer(toast or "▸ کردار ثبت شد")
 
 
 # ═══════════════ کاوش ═══════════════
@@ -1252,6 +1333,38 @@ async def cb_menu(c: CallbackQuery):
             await c.message.edit_text(f"🛰 <b>فرماندهی مانارچ</b> — {p.get('name')}\n🎖 {PL.rank_label(p)} · ❤️ {ui.n(p['hp'])}/{ui.n(p['max_hp'])} · 🔋 {ui.n(p['energy'])} · 🪙 {ui.n(p['credits'])} اعتبار\n📊 قدرت <b>{ui.n(PL.power_rating(p))}</b> · 🔬 پرونده\u200cهای باز <b>{len(research.known_rows(uid))}</b>", reply_markup=kb.main_menu(p, has_combat=bool(act)))
         except TelegramBadRequest:
             pass
+    elif key == "me":
+        try:
+            await c.message.edit_text(PL.card(p), reply_markup=kb.kb([
+                [("menu:all", "🛰 همۀ دستورها"), ("menu:main", "↩️ منو")]]))
+        except TelegramBadRequest:
+            pass
+    elif key == "fight":
+        if act:
+            await cmd_fight(c.message)
+        else:
+            await cmd_hunt(c.message, CommandObject())
+    elif key == "all":
+        try:
+            await c.message.edit_text(f"🛰 <b>همۀ دستورها</b> — {p.get('name')}\n"
+                                      f"🎖 {PL.rank_label(p)} {ui.DOT} 📊 قدرت <b>{ui.n(PL.power_rating(p))}</b>",
+                                      reply_markup=kb.full_menu(p, has_combat=bool(act)))
+        except TelegramBadRequest:
+            pass
+    elif key == "links":
+        try:
+            await c.message.edit_text(
+                "🛰 <b>پیوندهای مانارچ</b>\n\n"
+                "▪️ کانالِ فرماندهی: آموزش‌ها، پرونده‌های تایتان و اخبارِ باس\n"
+                "▪️ گروهِ اصلیِ فرماندهی: میدانِ عملیات، بدونِ سقفِ عضو\n"
+                "▪️ می‌توانی ربات را به گروه خودت هم بیاوری",
+                reply_markup=kb.kb([[(config.CHANNEL_URL, "📢 کانال"),
+                                     (config.GROUP_URL, "👥 گروه")],
+                                    [(f"https://t.me/{config.BOT_USER}?startgroup=true",
+                                      "➕ افزودنِ ربات به گروه")],
+                                    [("menu:main", "↩️ منو")]]))
+        except TelegramBadRequest:
+            pass
     elif key == "codex":
         try:
             await c.message.edit_text(codex_text(uid), reply_markup=codex_kb(uid))
@@ -1318,7 +1431,8 @@ COMMAND_MAP = {
     "upgrade": (cmd_upgrade, ARGS), "market": (cmd_market, NOARGS), "sell": (cmd_sell, ARGS),
     "bounty": (cmd_bounty, ARGS), "vault": (cmd_vault, ARGS), "missions": (cmd_missions, NOARGS),
     "daily": (cmd_daily, NOARGS), "div": (cmd_div, ARGS), "ref": (cmd_ref, NOARGS),
-    "report": (cmd_report, NOARGS),
+    "report": (cmd_report, NOARGS), "menu": (cmd_menu, NOARGS),
+    "setmain": (cmd_setmain, ARGS),
 }
 
 FA = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
@@ -1342,6 +1456,8 @@ async def on_text(m: Message):
     parts = body.split(maxsplit=1)
     key = parts[0].lower().translate(FA)
     arg = (parts[1] if len(parts) > 1 else "") or ""
+    if not await access_ok(m, key):
+        return
     entry = None
     for name, aliases in ALIASES.items():
         if key == name or key in [a.lower() for a in aliases]:
@@ -1408,6 +1524,64 @@ async def burst_guard(handler, event, data):
     uid = getattr(getattr(event, "from_user", None), "id", None)
     if uid is not None and burst_drop(int(uid)):
         await _burst_notice(event)
+        return None
+    return await handler(event, data)
+
+
+@router.my_chat_member()
+async def on_membership(up, bot: Bot):
+    """ربات به گروه اضافه شد: خوش‌آمدِ کوتاه + ثبتِ خودکارِ «گروهِ اصلی» اگر فرمانده افزود."""
+    from aiogram.enums import ChatMemberStatus as ST
+    chat, new = up.chat, up.new_chat_member
+    old = (up.old_chat_member.status or "") if up.old_chat_member else ""
+    st = new.status or ""
+    if chat.type == "private":
+        return
+    GATE.forget(chat.id)
+    if st in (ST.MEMBER, ST.ADMINISTRATOR, ST.CREATOR) and old not in (ST.MEMBER, ST.ADMINISTRATOR, ST.CREATOR):
+        events.ensure_chat(chat.id, chat.title or "گروه", "group")
+        by_admin = bool(up.from_user and config.is_admin(up.from_user.id))
+        if by_admin:
+            GATE.mark_main(chat.id, True)
+        await bot.send_message(
+            chat.id,
+            f"🛰 <b>فرماندۀ مانارچ در «{chat.title}» مستقر شد</b>\n"
+            f"<code>{'گروهِ اصلی — بدونِ سقفِ عضو' if by_admin else 'عضو: ' + str(await GATE.members(bot, chat.id) or '—') + ' · حداقل ' + str(config.MIN_MEMBERS)}</code>\n\n"
+            + ("✅ چون فرمانده افزود، این گروه از سقفِ عضو معاف شد.\n" if by_admin else
+               f"🚪 گروه‌های زیر {config.MIN_MEMBERS} عضو اجرا نمی‌شوند.\n")
+            + "\n▪️ برای شروعِ فصل: <code>/start</code>\n"
+            "▪️ آموزش‌ها و پرونده‌ها در کانال: "
+            f"<a href=\"{config.CHANNEL_URL}\">کانالِ فرماندهی</a>",
+            reply_markup=kb.kb([[("menu:main", "🛰 تابلوی فرماندهی")],
+                                [(config.GROUP_URL, "👥 گروه"), (config.CHANNEL_URL, "📢 کانال")]]))
+    elif st in (ST.LEFT, ST.KICKED):
+        log.info("🚪 از گروه رانده شدیم: %s", chat.id)
+
+
+@router.callback_query.outer_middleware()
+async def access_guard_cb(handler, event, data):
+    """دکمه‌ها هم زیرِ دروازۀ‌اند: پیوی و گروهِ خلوت فقط کارتِ دروازہ می‌بینند."""
+    msg = getattr(event, "message", None)
+    if msg is None or getattr(msg, "chat", None) is None:
+        return await handler(event, data)
+    uid = int(getattr(getattr(event, "from_user", None), "id", 0) or 0)
+    ok, why, n = await GATE.verdict(event.bot, msg.chat, uid)
+    if ok:
+        return await handler(event, data)
+    if GATE.may_notify(uid, msg.chat.id, why):
+        await reply(msg, GATE.text_for(why, name=name_of(msg), count=int(n or 0)),
+                    GATE.kb_for(why))
+    try:
+        await event.answer("⛔️ مانارچ فقط در گروهِ فعال اجرا می‌شود.")
+    except Exception:
+        pass
+    return None
+
+
+@router.message.outer_middleware()
+async def access_guard_msg(handler, event, data):
+    """همان دروازہ برای هر پیامی که از روتر رد می‌شود."""
+    if isinstance(event, Message) and not await access_ok(event, _key_of(event)):
         return None
     return await handler(event, data)
 

@@ -31,10 +31,13 @@ TEXT_CMDS = ("/start", "/help", "/rules", "/me", "/profile", "/codex", "/clearan
              "/raid", "/explore", "/exp", "/missions", "/daily", "/shop", "/market", "/exchange",
              "/top", "/ranking", "/rank", "/arena", "/div", "/divisions", "/war", "/research",
              "/scan", "/kb", "/kb rules", "/cache", "/inventory", "/inv", "/status", "/zone",
-             "/news", "/faq", "/join", "/board", "/leaderboard", "/event", "/items", "/craft")
+             "/news", "/faq", "/join", "/board", "/leaderboard", "/event", "/items", "/craft",
+             "/menu", "/setmain", "/setmain off", "/raid strike", "/hunt", "/sell ژن 1",
+             "/equip 1", "/use 1", "/upgrade 1", "/bond up kong")
 BTN_CB = ("menu:codex", "menu:main", "menu:missions", "menu:explore", "menu:shop", "menu:div",
           "mis:claim", "dv:fac", "dv:top", "dv:war", "ra:join", "ra:strike", "ra:focus",
-          "ra:shield", "ra:repair", "ra:analyze", "ra:regroup", "ar:me", "ar:go", "fac:lab")
+          "ra:shield", "ra:repair", "ra:analyze", "ra:regroup", "ar:me", "ar:go", "fac:lab",
+          "menu:me", "menu:all", "menu:links", "menu:fight")
 
 ALLOW_RE = re.compile(
     r"^("
@@ -99,7 +102,31 @@ def main(strict=False):
                               chat_instance="ci", data=cb,
                               message=T.message(bot, "/start", uid, chat)).as_(bot)
             await d.feed_update(bot, Update(update_id=2, callback_query=q))
+    async def gates():
+        """کارت‌های دروازہ (پیوی و گروهِ خلوت) هم باید فارسی باشند."""
+        import access as GATE
+        from aiogram.types import Chat, Message
+        sess.member_count = 24
+        priv = Message(message_id=7, date=1_700_000_000, chat=Chat(id=uid + 500000, type="private"),
+                       from_user=User(id=uid + 500000, is_bot=False, first_name="مهمان"), text="/me")
+        await d.feed_update(bot, Update(update_id=3, message=priv.as_(bot)))
+        sess.member_count = 3
+        c_small = -100902
+        events.ensure_chat(c_small, "گروهِ خلوت", "group")
+        for st in ("_THROTTLE", "_BURST", "_SPAM_WARN", "_CARD_SEEN"):
+            getattr(H, st, {}).clear()
+        GATE._noticed.clear()
+        for cid in list(GATE._counts):
+            GATE.forget(cid)
+        await d.feed_update(bot, Update(update_id=4, message=T.message(bot, "/me", uid, c_small)))
+        sess.member_count = 24
+        GATE._noticed.clear()
+        for cid in list(GATE._counts):
+            GATE.forget(cid)
+        await d.feed_update(bot, Update(update_id=5, message=T.message(bot, "/menu", uid, c_small)))
+
     asyncio.run(go())
+    asyncio.run(gates())
 
     texts = [d.get("text") or d.get("caption") or "" for n, d in sess.calls
              if n in ("sendMessage", "editMessageText", "sendPhoto", "editMessageCaption")]

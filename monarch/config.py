@@ -45,6 +45,12 @@ CHANNEL_ID = int(os.getenv("CHANNEL_ID") or -1004499194759)
 CHANNEL_URL = os.getenv("CHANNEL_URL", "https://t.me/PLAYTIMEPROTOCOL")
 GROUP_URL = os.getenv("GROUP_URL", "https://t.me/+BdlZ6aF4ai8xZjNk")
 REQUIRE_CHANNEL = os.getenv("REQUIRE_CHANNEL", "1") == "1"   # گیت عضویت کانال
+
+# ─────────── دروازۀ گروه (بازی فقط در گروه) ───────────
+MIN_MEMBERS = max(2, int(os.getenv("MIN_MEMBERS", "5") or 5))   # «بالای ۴ نفر»
+_main = os.getenv("GROUP_ID") or os.getenv("MAIN_GROUP_ID") or ""
+MAIN_GROUPS = {int(x) for x in _main.translate(_FA).replace(" ", "").split(",") if x.lstrip("-").isdigit()}
+
 MEMBERSHIP_CACHE = 900                                       # کش عضویت ۱۵ دقیقه
 
 BRAND = "فرماندهی مانارچ"

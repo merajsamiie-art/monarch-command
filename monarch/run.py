@@ -19,57 +19,52 @@ from config import BOT_TOKEN
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("monarch")
 
-COMMANDS = [
-    ("start", "شروع / ورود به مانارچ"),
-    ("me", "کارت عامل و وضعیت"),
-    ("codex", "دیتابیس تایتان‌ها"),
-    ("dossier", "پرونده‌ی کامل یک تایتان"),
-    ("track", "ردیابی سیگنال لرزه‌ای"),
-    ("sample", "نمونه‌برداری میدانی"),
-    ("analyze", "شروع سیکل آزمایشگاه"),
-    ("lab", "نتیجه‌ی آزمایشگاه"),
-    ("bond", "پیوند با تایتان / ارتقای آن"),
-    ("hunt", "شکار داوطلبانه"),
-    ("fight", "ادامه‌ی نبرد فعال"),
-    ("boss", "عملیات باس گروهی"),
-    ("scan", "وضعیت منطقه"),
-    ("raid", "رید جهانی"),
-    ("explore", "اعزام تیم کاوش"),
-    ("arena", "آرنای رتبه‌ای"),
-    ("duel", "دوئل با عامل دیگر"),
-    ("puzzle", "رمزنگاری مانارچ"),
-    ("shop", "فروشگاه مانارچ"),
-    ("inv", "کوله و تجهیزات"),
-    ("equip", "مجهزکردن تجهیز"),
-    ("upgrade", "ارتقای تجهیز"),
-    ("market", "بازار منابع"),
-    ("sell", "فروش منبع"),
-    ("vault", "خزنه‌ی سازمان"),
-    ("missions", "مأموریت‌های روزانه"),
-    ("daily", "حضور روزانه"),
-    ("div", "سازمان: ساخت / تسهیلات / جنگ"),
-    ("bounty", "گرفتن جایزه برای سر یک عامل"),
-    ("top", "رنکینگ"),
-    ("clearance", "الزامات رتبه و دروازه‌ها"),
-    ("rules", "قوانین نبرد"),
+COMMANDS = [            # منویِ اسلش در گروه — خلوت: هرچیزِ لازم، نه همه‌چیز
+    ("start", "ورود به فصلِ جاری"),
+    ("menu", "تابلوی فرماندهی"),
+    ("me", "کارتِ عامل"),
+    ("codex", "دیتابیسِ تایتان‌ها"),
+    ("track", "ردیابیِ سیگنال"),
+    ("hunt", "شکارِ داوطلبانه"),
+    ("fight", "ادامۀ نبرد"),
+    ("boss", "عملیات باس"),
+    ("raid", "یورشِ جهانی"),
+    ("explore", "تیمِ کاوش"),
+    ("shop", "تأمینات"),
+    ("missions", "مأموریتِ روزانه"),
+    ("top", "رتبۀ هفتگی"),
     ("help", "دستورنامه"),
-    ("ref", "لینک معرفی"),
+]
+
+PV_COMMANDS = [         # پیوی فقط دروازہ است: سه چیز، نه بیشتر
+    ("start", "من را به گروه اضافه کن"),
+    ("help", "دستورنامۀ فرماندهی"),
+    ("join", "گروه و کانالِ مانارچ"),
 ]
 
 
+def _cmds(pairs):
+    from aiogram.types import BotCommand
+    return [BotCommand(command=c, description=d) for c, d in pairs]
+
+
 async def bootstrap_meta(bot: Bot):
-    """یک‌بار در هر استارت: منوی دستورات + توضیح ربات."""
+    """یک‌بار در هر استارت: منوی اسلش (گروه/پیوی) + هویتِ فارسیِ بات."""
+    from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats
     try:
-        await bot.set_my_commands([(c, d) for c, d in COMMANDS])
-        await bot.set_my_commands([], scope=None)
-        await bot.set_my_description(
-            "🛰 مانارچ COMMAND — MMORPG گروهیِ دنیای Kaiju.\n"
-            "همه با صفر شروع می‌کنند: ردیابی کن، نمونه بگیر، تحلیل کن، شکار کن، "
-            "باس بزن، سازمان بساز و روزی با Godzilla روبه‌رو شو.\n"
-            "🦖 THE TITANS ARE ALREADY HERE.")
+        await bot.set_my_commands(_cmds(COMMANDS))
+        await bot.set_my_commands(_cmds(COMMANDS), scope=BotCommandScopeAllGroupChats())
+        await bot.set_my_commands(_cmds(PV_COMMANDS), scope=BotCommandScopeAllPrivateChats())
+        await bot.set_my_name("🦖☢️ فرماندۀ مانارچ")
         await bot.set_my_short_description(
-            "☢️ MMORPG تایتان‌ها در تلگرام · ۲۴/۷ زنده · بدون Pay-to-Win")
-        await bot.set_my_name("فرماندهی مانارچ")
+            "نبردهای تایتان در تلگرام — جهانِ زندهٔ ۲۴ ساعته، بدونِ خریدِ بُرد.")
+        await bot.set_my_description(
+            "🛰 مانارچ — پروندۀ زندهٔ تایتان‌ها\n"
+            "همه از صفر شروع می‌کنند: سیگنال بگیر، نمونه بردار، تحلیل کن، شکار کن،"
+            " باس بزن، سازمان بساز و روزی روبه‌روی گودزیلا بایست.\n"
+            "▪️ بازی فقط در گروه می‌چرخد — من را به گروهت اضافه کن.\n"
+            "▪️ آموزش‌ها و پرونده‌ها در کانالِ فرماندهی.\n"
+            "🦖 تایتان‌ها از قبل اینجا بودند.")
     except Exception:
         log.exception("meta update failed")
 

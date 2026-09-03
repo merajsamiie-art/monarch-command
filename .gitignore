@@ -12,3 +12,8 @@ monarch.db
 monarch.db-shm
 monarch.db-wal
 *.bak
+
+# ساختۀ محلیِ آپلود
+github-mc.zip
+mc-github.zip
+monarch/data/channel_posts.json

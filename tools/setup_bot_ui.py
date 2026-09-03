@@ -100,15 +100,28 @@ LABELS = {
     "puzzle": "🔐 رمزنگارِ مانارچ",
     "div": "🏢 سازمان‌ها",
     "join": "📌 پیوستن به گروه",
+    "menu": "🛰 تابلوی فرماندهی",
+    "setmain": "🚪 ثبتِ این گروه به‌عنوان گروه اصلی",
 }
 
 
-def _cmds():
-    """منوی /commands — از COMMAND_MAP واقعی + برچسبِ فارسی."""
+def _mk(pairs):
     from aiogram.types import BotCommand
-    import handlers
-    keys = sorted(getattr(handlers, "COMMAND_MAP", {}) or {})
-    return [BotCommand(command=k, description=LABELS.get(k, "🛰 " + k)[:48]) for k in keys if k][:40]
+    return [BotCommand(command=k, description=(LABELS.get(k) or d or k)[:48])
+            for k, d in pairs]
+
+
+def _menus():
+    """سه سطح منو، یک منبعِ حقیقت: خودِ ربات (run.py).
+
+    پیوی عمداً خلوت است — آنجا فقط دروازۀ ورود به گروه هست، نه بازی.
+    """
+    from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats
+    import run as RUN
+    grp, pv = _mk(RUN.COMMANDS), _mk(RUN.PV_COMMANDS)
+    return [("منوی پیش‌فرض و گروه‌ها", grp, None),
+            ("منوی گروه‌ها", grp, BotCommandScopeAllGroupChats()),
+            ("منوی پیوی (فقط دروازۀ)", pv, BotCommandScopeAllPrivateChats())]
 
 
 async def _try(bot, label, coro):
@@ -132,7 +145,9 @@ async def main(channel_id=None, group_id=None, skip_menu=False):
         print(f"🛰 بات: {me.first_name} · @{me.username} · id={me.id}\n")
 
         if not skip_menu:
-            await _try(bot, f"منوی دستورات ({len(_cmds())} فرمان)", bot.set_my_commands(_cmds()))
+            for label, cmds, scope in _menus():
+                await _try(bot, f"{label} — {len(cmds)} فرمان",
+                           bot.set_my_commands(cmds, scope=scope))
 
         # ── ۱) هویتِ بات ──
         print("▸ بات")

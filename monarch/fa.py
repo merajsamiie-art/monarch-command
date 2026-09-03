@@ -466,6 +466,14 @@ def name_for(latin: str, tag: str = "") -> str:
 RUN = re.compile(r"[A-Za-z][A-Za-z0-9.'\-]{1,}")
 
 
+FA_DIGITS = str.maketrans("0123456789.", "۰۱۲۳۴۵۶۷۸۹٫")
+
+
+def fa_num(x) -> str:
+    """رقمِ فارسی برای متنِ روایی (داشته‌های عددی/کدها لاتین می‌مانند)."""
+    return str(x).translate(FA_DIGITS)
+
+
 def clean_str(s: str) -> str:
     """واژه‌های لاتینِ شناخته‌شده را در دلِ یک sentence فارسی هم ترجمه می‌کند.
 

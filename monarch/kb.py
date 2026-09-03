@@ -12,18 +12,31 @@ def kb(rows: list) -> InlineKeyboardMarkup:
 
 
 def main_menu(p: dict = None, has_combat: bool = False) -> InlineKeyboardMarkup:
+    """منویِ خلوت: چهار ردیف، فقط چیزهایی که امروز لازم است.
+
+    بقیه زیرِ «🛰 همۀ دستورها» (``full_menu``) است — گروه نباید پر از دکمه شود.
+    """
     r = []
     if has_combat:
         r.append([("cbt:resume", "⚔️ ادامه‌ی نبرد")])
     r += [
-        [("menu:codex", "🦖 دیتابیس تایتان"), ("menu:track", "📡 ردیابی سیگنال")],
-        [("menu:explore", "🗺 کاوش"), ("menu:boss", "🕹 عملیات باس")],
-        [("menu:raid", "🌍 رید جهانی"), ("menu:arena", "🏆 آرنا")],
-        [("menu:shop", "🪙 فروشگاه"), ("menu:inv", "🎒 تجهیز")],
-        [("menu:missions", "📅 روزانه"), ("menu:div", "🏢 Division")],
-        [("menu:top", "🏆 رنکینگ"), ("help", "📖 دستورنامه")],
-        [(config.CHANNEL_URL, "📢 کانال"), (config.GROUP_URL, "👥 گروه")],
+        [("menu:me", "🪪 کارتِ تو"), ("menu:codex", "🦖 تایتان‌ها")],
+        [("menu:fight", "💥 نبرد"), ("menu:raid", "🌍 یورشِ جهانی")],
+        [("menu:missions", "📅 روزانه"), ("menu:shop", "🪙 تأمینات")],
+        [("menu:all", "🛰 همۀ دستورها")],
     ]
+    return kb(r)
+
+
+def full_menu(p: dict = None, has_combat: bool = False) -> InlineKeyboardMarkup:
+    """همۀ سطوحِ بازی — برای کسی که دنبالِ چیزِ خاص می‌گردد."""
+    r = [
+        [("menu:track", "📡 ردیابی"), ("menu:explore", "🗺 کاوش"), ("menu:boss", "🕹 باس")],
+        [("menu:arena", "🏆 آرنا"), ("menu:inv", "🎒 کوله"), ("menu:div", "🏢 سازمان")],
+        [("menu:top", "📊 رنکینگ"), ("help", "📖 دستورنامه"), ("menu:main", "↩️ خلوت")],
+    ]
+    if has_combat:
+        r.insert(0, [("cbt:resume", "⚔️ ادامه‌ی نبرد")])
     return kb(r)
 
 

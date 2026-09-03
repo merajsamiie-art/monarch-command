@@ -10,12 +10,12 @@ from db import now
 
 # ── منابع ──
 RES = {
-    "credits": dict(name="اعتبار مانارچ", emj="coin", icon="🪙", unit="اعتبار", sellable=False),
-    "cores": dict(name="هسته تایتان", emj="core", icon="💎", unit="هستۀ تایتان", sellable=False),
-    "dna": dict(name="قطعه ژنتیکی", emj="dna", icon="🧬", unit="قطعۀ ژنتیکی", sellable=True, base=90),
+    "credits": dict(name="اعتبارِ مانارچ", emj="coin", icon="🪙", unit="اعتبار", sellable=False),
+    "cores": dict(name="هستۀ تایتان", emj="core", icon="💎", unit="هستۀ تایتان", sellable=False),
+    "dna": dict(name="قطعهٔ ژنتیکی", emj="dna", icon="🧬", unit="قطعۀ ژنتیکی", sellable=True, base=90),
     "cells": dict(name="پیل انرژی", emj="cell", icon="🔋", unit="پیل انرژی", sellable=True, base=40),
-    "mats": dict(name="ماده تایتان", emj="material", icon="🔩", unit="مادۀ تایتان", sellable=True, base=55),
-    "fdata": dict(name="داده محرمانه", emj="data", icon="📡", unit="دادۀ محرمانه", sellable=True, base=120),
+    "mats": dict(name="مادۀ تایتان", emj="material", icon="🔩", unit="مادۀ تایتان", sellable=True, base=55),
+    "fdata": dict(name="دادهٔ محرمانه", emj="data", icon="📡", unit="دادۀ محرمانه", sellable=True, base=120),
 }
 
 # ── تجهیزات (فقط با بازی به‌دست می‌آید؛ خرید مستقیم قدرت با پول = ممنوع) ──

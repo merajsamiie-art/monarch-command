@@ -362,7 +362,7 @@ def power_rating(p: dict) -> int:
 
 def _pair(items: list, per: int = 3) -> list:
     """چیدنِ برچسب‌ها در ردیف‌های کوتاه (کارتِ فشرده)."""
-    return [" " + " · " + " ".join(items[i:i + per]) for i in range(0, len(items), per)]
+    return ["  · " + " · ".join(items[i:i + per]) for i in range(0, len(items), per)]
 
 
 def card(p: dict, full: bool = True) -> str:
@@ -396,8 +396,63 @@ def card(p: dict, full: bool = True) -> str:
                           for k, m in eco.RES.items()])) if full else None,
         gear=(gear or ["<i>هیچ تجهیزی فعال نیست — /shop</i>"]) if full else None,
         bonds=bonds or None,
+        disc=f"{len(research.known_rows(p['user_id']))}/{len(__import__('titans').TITANS)}",
+        daily=(f"✅ امروز {ui.DOT} {int(p.get('streak') or 1)} روز پیوسته"
+               if p.get("last_seen_day") == db.local_day()
+               else "⬜ امروز ثبت نشده"),
+        vault=float(p.get("vault") or 0),
+        flow=_flow(p), nxt=_next_step(p),
     )
     return ui.agent_card(dat)
+
+
+def _flow(p: dict) -> list:
+    """آنچه همین حالا در زمینِ این عامل می‌چرخد (کاوش/آزمایشگاه/یورش/سازمان)."""
+    import division
+    import expedition
+    import raid as RA
+    import titans as TN
+    import ui
+    uid = p["user_id"]
+    out = []
+    st = expedition.status(uid)
+    if st.get("active"):
+        out.append(f"🗺 کاوش در «{st.get('zone') or '—'}» — بازگشت تا {ui.dur(st['left'])}")
+    elif st.get("ready"):
+        out.append("🗺 کاوش برگشته — <code>/explore claim</code>")
+    if p.get("lab_titan") and float(p.get("lab_until") or 0) > now():
+        nm = (TN.get(p["lab_titan"]) or {}).get("name", "نمونه")
+        out.append(f"🔬 آزمایشگاه مشغولِ «{nm}» — {ui.eta(float(p['lab_until']))}")
+    rs = RA.state()
+    if rs and not rs.get("over"):
+        out.append(f"🌍 یورشِ جهانی «{rs.get('name')}» — پایان {ui.eta(float(rs.get('ends_at') or 0))}")
+    dv = division.get_for(uid)
+    if dv.get("name"):
+        out.append(f"🏢 «{dv['name']}» {ui.DOT} سطح {int(dv.get('level') or 1)} "
+                   f"{ui.DOT} {len(dv.get('members') or [])} عضو")
+    return out
+
+
+def _next_step(p: dict) -> str:
+    """یک قدمِ مشخص، بر اساسِ نزدیک‌ترین پرونده — تا تازه‌وارث نداند کجا برود."""
+    import research
+    import titans as TN
+    import ui
+    if is_dead(p):
+        return f"☠️ حالتِ بازیابی — {ui.dur(max(0.0, dead_left(p)))} تا بازگشت"
+    rows = [r for r in research.known_rows(p["user_id"]) if int(r.get("stage") or 0) < 5]
+    if not rows:
+        return "📡 <code>/track</code> — نخستین سیگنال لرزه‌ای را بگیر"
+    best = rows[0]
+    nm = (TN.get(best["titan_id"]) or {}).get("name", best["titan_id"])
+    stage = int(best.get("stage") or 0)
+    hint = {0: f"📡 <code>/track</code> برای سیگنالِ «{nm}»",
+            1: f"👁 <code>/sample {nm}</code> — امضا را محکم کن",
+            2: f"🧬 <code>/sample {nm}</code> هنوز نمونه کم دارد",
+            3: f"🔬 <code>/analyze {nm}</code> — سیکلِ آزمایشگاه را باز کن",
+            4: f"👑 <code>/bond {nm}</code> — پرونده آمادهٔ پیوند است"}
+    nxt = hint.get(stage) or f"⚔️ <code>/hunt {nm}</code> — پیوند را در نبرد محک بزن"
+    return nxt
 
 
 def top_by(field: str, limit: int = 10) -> list:

@@ -114,6 +114,7 @@ class FakeSession:
     def __init__(self):
         self.calls = []
         self.chat_member = "member"
+        self.member_count = 24          # عضوِ گروه (دروازۀ «بالای ۴ نفر»)
 
     def _msg(self, chat_id, mid, text):
         return Message(message_id=mid, date=1_700_000_000,
@@ -134,6 +135,8 @@ class FakeSession:
             from aiogram.types import ChatMemberUpdated
             return {"user": {"id": data.get("user_id"), "is_bot": False, "first_name": "x"},
                     "status": self.chat_member}
+        if name == "getChatMemberCount":
+            return self.member_count
         if name == "getChat":
             return {"id": data.get("chat_id"), "type": "supergroup", "title": "OPS"}
         return True
@@ -604,7 +607,7 @@ def test_16_shop_market_upgrade_sell():
         economy.upgrade(uid, "wp_ion")
     assert PL.item_level(uid, "wp_ion") <= 10
     mb = economy.market_board()
-    assert "قطعه ژنتیکی" in mb and "اعتبار" in mb, mb[:120]
+    assert "قطعهٔ ژنتیکی" in mb and "اعتبار" in mb, mb[:120]
     m = economy.sell(uid, "mats", 10)
     assert m["ok"]
     assert PL.get(uid)["mats"] >= 0
@@ -808,6 +811,82 @@ def test_22_aiogram_smoke_flow():
     warn = [t for t in sess.texts() if "سقف مجاز" in t]
     assert warn, "سقف نرخ هیچ بازخوردی نمی‌دهد"
     assert len(warn) == 1, f"هشدارِ تکراری خودش اسپم است: {len(warn)}"
+
+
+def test_26_access_gate_group_only():
+    """پیوی = فقط دروازہ · گروه خلوت = قفل · گروهِ اصلی = آزاد (همۀ مسیرهای واقعی)."""
+    import access as GATE
+    d = main_dp()
+    bot, sess = build_bot()
+    sess.member_count = 4                                    # «بالای ۴ نفر» → ۵ لازم است
+    uid = next(_UID)
+    PL.ensure_player(uid, "عاملِ پیوی", "pvman")
+
+    async def pv_chat(text, who=None):
+        m = Message(message_id=random.randint(1, 10 ** 6), date=1_700_000_000,
+                    chat=Chat(id=who or uid, type="private"),
+                    from_user=User(id=who or uid, is_bot=False, first_name="عامل"),
+                    text=text)
+        return m.as_(bot)
+
+    async def go():
+        # ۱) پیوی: «/me» نباید کارت بدهد، فقط دروازۀ ورود
+        await d.feed_update(bot, Update(update_id=11, message=await pv_chat("/me")))
+        # ۲) پیوی: /start فقط کارتِ «من را به گروه اضافه کن»
+        await d.feed_update(bot, Update(update_id=12, message=await pv_chat("/start")))
+        # ۳) گروه خلوت (۴ عضو): قفل
+        c_small = next(_CHAT)
+        PL.note_chat(uid, c_small)
+        await d.feed_update(bot, Update(update_id=13, message=message(bot, "/me", uid, c_small)))
+        # ۴) گروه خلوت ولی «اصلی» با /setmain: آزاد
+        c_main = next(_CHAT)
+        GATE.mark_main(c_main, True)
+        await d.feed_update(bot, Update(update_id=14, message=message(bot, "/me", uid, c_main)))
+        # ۵) گروه ۲۴ نفره: آزاد
+        sess.member_count = 24
+        c_ok = next(_CHAT)
+        await d.feed_update(bot, Update(update_id=15, message=message(bot, "/me", uid, c_ok)))
+        # ۶) فرمانده (ادمین) در پیوی هم رد می‌شود
+        sess.member_count = 4
+        await d.feed_update(bot, Update(update_id=16, message=await pv_chat("/me", who=900001)))
+    asyncio.run(go())
+    tx = sess.texts()
+    gate_cards = [t for t in tx if "دروازۀ ورود" in t]
+    assert len(gate_cards) >= 2, f"کارتِ دروازہ در پیوی نیامد: {len(gate_cards)}"
+    assert not any("کارتِ عامل" in t for t in tx if "پیوی" in t), "در پیوی کارتِ عامل داده شد"
+    assert any("صحنۀ عملیات نیست" in t for t in tx), "گروهِ ۴ نفره قفل نشد"
+    assert any("کارتِ عامل" in t for t in tx), "گروهِ اصلی/پُر‌عضو هم قفل شد"
+    names = [n for n, _ in sess.calls]
+    assert "getChatMemberCount" in names, "دروازہ عضو نشد؟"
+    for cid in list(GATE._counts):
+        GATE.forget(cid)
+
+
+def test_27_menu_is_sparse():
+    """منوی اصلی خلوت است (≤۴ ردیف، ≤۸ دکمه) و «همۀ دستورها» بقیه را دارد."""
+    p = {"name": "آزمون", "rank": 1, "hp": 10, "max_hp": 10, "energy": 5, "credits": 1}
+    rows = kb.main_menu(p).inline_keyboard
+    assert len(rows) <= 4, f"منوی اصلی هنوز شلوغ است: {len(rows)} ردیف"
+    btns = [b for r in rows for b in r]
+    assert len(btns) <= 8, f"دکمه‌های منو: {len(btns)}"
+    assert all(b.text and not re.search(r"[A-Za-z]{3,}", b.text.replace("/start", ""))
+               for b in btns), "برچسبِ لاتین در منو مانده"
+    data = [b.callback_data for b in btns if b.callback_data]
+    assert "menu:all" in data, "دکمۀ «همۀ دستورها» نیست"
+    handled = {"main", "me", "all", "links", "codex", "track", "explore", "boss",
+               "raid", "arena", "shop", "inv", "missions", "div", "top", "fight"}
+    keys = {d.split(":")[1] for d in data}
+    assert keys <= handled, f"دکمه‌های بی‌پشتوانه: {keys - handled}"
+    full = [b for r in kb.full_menu(p).inline_keyboard for b in r]
+    assert len(full) >= len(btns), "منوی کامل از منوی اصلی خلوت‌تر است"
+    for b in full:
+        assert b.url or b.callback_data, "دکمهٔ بی‌کارکرد"
+    # هر کلیدِ منو باید به یک دستورِ واقعی وصل باشد
+    for b in full + btns:
+        if b.callback_data and b.callback_data.startswith("menu:"):
+            key = b.callback_data.split(":")[1]
+            if key not in ("main", "all", "links", "me"):
+                assert key in handlers.COMMAND_MAP or key == "codex", f"منوی شکسته: {key}"
 
 
 def test_23_channel_gate_enforced():

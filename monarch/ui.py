@@ -168,7 +168,7 @@ def classified(rows: list, title: str = "پروندۀ تایتان", cls: str = 
 
 def threat_stars(level: int) -> str:
     level = max(1, min(5, int(level or 1)))
-    return "☢️" * level + "・" * (5 - level)
+    return "☢️" * level + "▱" * (5 - level)
 
 
 def hp_color(p: float) -> str:
@@ -211,12 +211,21 @@ def agent_card(d: dict) -> str:
              f" {DOT} ".join(x for x in (kv("دقت", d.get("acc_txt", "—"), "🎯"),
                                          kv("جاخالی", d.get("dodge_txt", "—"), "🌀"),
                                          kv("بازیابی", d.get("regen", 0), "💚")) if x)]
+    if d.get("nxt"):
+        rows += ["", sect("گامِ بعد"), f" ▸ {d['nxt']}"]
+    if d.get("flow"):
+        rows += ["", sect("جریانِ عملیات"), *[f" ▪️ {x}" for x in d["flow"]]]
     if d.get("res_lines"):
         rows += ["", sect("منابع")] + list(d["res_lines"])
     if d.get("gear"):
         rows += ["", sect("تجهیزات فعال"), *d["gear"]]
     if d.get("bonds"):
         rows += ["", sect("پیوندهای تایتان"), *d["bonds"]]
+    chips = [x for x in ((f"🔬 پرونده {d['disc']}" if d.get("disc") else ""),
+                         (f"📅 {d['daily']}" if d.get("daily") else ""),
+                         (f"🏦 خزانه {n(d['vault'])}" if d.get("vault") else "")) if x]
+    if chips:
+        rows += ["", sect("کارنامه", "▤"), f" {DOT} ".join(chips)]
     if d.get("zone"):
         rows += ["", f"🌍 {d['zone']} {DOT} ⏳ {d.get('zone_left', '')}"]
     if d.get("dead"):
@@ -290,8 +299,9 @@ def combat_feed(state: dict, lines: list, title: str = "گزارش درگیری"
     out.append(foe + (("  <i>" + "  ".join(extra) + "</i>") if extra else ""))
     out.append(f"   {'  '.join(status_tags(d))}")
     out.append(HAIR)
-    log = [x for x in (lines or [])[-5:] if x]
-    out += [f"▸ {x}" for x in (log or ["<i>میدان آرام است…</i>"])]
+    log = [str(x).strip() for x in (lines or [])[-5:] if x and str(x).strip()]
+    out += [("  " + x) if x.startswith("↳") else f"▸ {x}"
+            for x in (log or ["<i>میدان آرام است…</i>"])]
     return "\n".join(out)
 
 
