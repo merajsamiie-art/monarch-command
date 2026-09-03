@@ -55,7 +55,7 @@ jobs:
           DB=monarch.db
           save_db() {
             python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
-            git add "$DB" 2>/dev/null || true
+            git add -f "$DB" 2>/dev/null || true
             git commit -m "db save exit" >/dev/null 2>&1 || true
             git pull --rebase --autostash >/dev/null 2>&1 || true
             git push >/dev/null 2>&1 || true
@@ -64,7 +64,7 @@ jobs:
           ( while true; do
               sleep 60
               python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
-              git add "$DB" 2>/dev/null || true
+              git add -f "$DB" 2>/dev/null || true
               git commit -m "autosave db" >/dev/null 2>&1 || true
               git pull --rebase --autostash >/dev/null 2>&1 || true
               git push >/dev/null 2>&1 || true
@@ -73,7 +73,7 @@ jobs:
           timeout 20400 python3 run.py || true
           kill $SAVER 2>/dev/null || true
           python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
-          git add "$DB" 2>/dev/null || true
+          git add -f "$DB" 2>/dev/null || true
           git commit -m "db save final" >/dev/null 2>&1 || true
           git pull --rebase --autostash >/dev/null 2>&1 || true
           git push >/dev/null 2>&1 || true

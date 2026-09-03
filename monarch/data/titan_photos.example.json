@@ -1,0 +1,5 @@
+{
+  "_readme": "کارت تصویری تایتان‌ها. این فایل را با نام titan_photos.json کپی کن؛ کلید = id تایتان در titans.py، مقدار = URLِ مستقیم تصویر (مثلاً i.pinimg.com/originals/…) یا مسیر فایل داخل monarch/assets/titans. اولویت با فایل محلی است. برای ساخت فایل محلیِ به‌اندازه‌ی یکدست: python3 tools/pin_import.py <tid> --url <image-url>",
+  "godzilla": "monarch/assets/titans/godzilla.jpg",
+  "kong": "monarch/assets/titans/kong.jpg"
+}

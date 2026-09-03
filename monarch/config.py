@@ -48,6 +48,7 @@ REQUIRE_CHANNEL = os.getenv("REQUIRE_CHANNEL", "1") == "1"   # گیت عضویت
 MEMBERSHIP_CACHE = 900                                       # کش عضویت ۱۵ دقیقه
 
 BRAND = "MONARCH COMMAND"
+TAGLINE = "🦖☢️ MONARCH COMMAND — The Titans Are Already Here."
 BOT_USER = "MonarchCommandBot"
 PREFIX = "مانارچ"          # پیشوند دستورات متنی فارسی («مانارچ من»)
 

@@ -52,6 +52,7 @@ _MEM_CACHE = {}          # uid -> (ok, ts)
 _FEED = {}               # chat_id -> message_id of live combat feed
 _THROTTLE = {}           # uid -> [ts, ...] penalties
 _BURST = {}              # uid -> [ts, ...] سقفِ انفجارِ بی‌صدا
+_CARD_SEEN = {}          # (uid, tid) -> ts : کارت تصویری یک‌بار
 
 
 # ─────────── helpers ───────────
@@ -63,7 +64,23 @@ def _chat_id_of(m) -> int:
     return int(msg.chat.id) if msg and getattr(msg, "chat", None) else int(config.PUBLIC_CHAT_ID or 0)
 
 
-async def reply(m, text: str, markup=None, feed=False, cid=None):
+async def reply(m, text: str, markup=None, feed=False, cid=None, photo=None):
+    """پاسخ MONARCH؛ اگر `photo` داده شود و تازه‌سازی لازم باشد، کارت تصویری می‌فرستد.
+
+    فیدِ نبرد هرگز عکس نمی‌فرستد (ضداسپم) — فقط پیام‌های «یک‌بار‌دیدنی» مثل پرونده.
+    """
+    if photo and not feed:
+        tgt = m if isinstance(m, Message) else m.message
+        try:
+            src = photo
+            if isinstance(photo, str) and not photo.startswith("http"):
+                from aiogram.types import InputFile
+                src = InputFile(photo)
+            elif isinstance(photo, str) and photo.startswith("http"):
+                pass                      # تلگرام خودش URL را می‌گیرد
+            return await tgt.answer_photo(src, caption=text[:1024], reply_markup=markup)
+        except Exception as e:
+            log.debug("photo card failed (%s) — text fallback", str(e)[:80])
     try:
         if feed and cid:
             key = _chat_id_of(m)
@@ -388,6 +405,11 @@ async def cb_dossier(c: CallbackQuery):
         await c.message.edit_text(research.dossier(c.from_user.id, t), reply_markup=kb.kb([[(f'dx:{tid}:{page}', '🔄 بروزرسانی'), (f'hunt:{tid}', '⚔️ شکار'), (f'bond:{tid}', '👑 پیوند')], [(f'cxp:{page}', '↩️ دیتابیس')]]))
     except TelegramBadRequest:
         pass
+    # کارت تصویری: حداکثر یک‌بار برای هر پرونده در هر ۶ ساعت (ضداسپم)
+    key = (int(c.from_user.id), str(tid))
+    if ui.titan_photo(tid) and now() - float(_CARD_SEEN.get(key) or 0) > 21600:
+        _CARD_SEEN[key] = now()
+        await reply(c, research.dossier(c.from_user.id, t), photo=ui.titan_photo(tid))
     await c.answer()
 
 
@@ -407,7 +429,8 @@ async def cmd_dossier(m: Message, command: CommandObject = None):
         return
     t = TN.get(arg) if TN.get(arg) else hit[0]
     await reply(m, research.dossier(m.from_user.id, t),
-                kb.kb([[(f"hunt:{t['id']}", "⚔️ شکار"), (f"bond:{t['id']}", "👑 پیوند")]]))
+                kb.kb([[(f"hunt:{t['id']}", "⚔️ شکار"), (f"bond:{t['id']}", "👑 پیوند")]]),
+                photo=ui.titan_photo(t["id"]))
 
 
 # ═══════════════ تحقیق ═══════════════

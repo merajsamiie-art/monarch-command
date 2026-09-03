@@ -1,5 +1,7 @@
 # 🛰 UI Kit — فرمت «پرونده‌ی محرمانه MONARCH» (بدون وابستگی به aiogram)
+import json
 import math
+import os
 
 import emoji as E
 from db import now
@@ -148,3 +150,41 @@ def circle(p: float) -> str:
 
 def grid(items: list, per_row: int = 2) -> list:
     return [items[i:i + per_row] for i in range(0, len(items), per_row)]
+
+
+# ─────────── کارت تصویری تایتان (Pinterest / assets) ───────────
+_ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "titans")
+_PHOTO_MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "titan_photos.json")
+_photos = None
+_ext = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def _photo_map() -> dict:
+    """data/titan_photos.json → {tid: url} (URL مستقیم تصویر؛ تلگرام خودش می‌گیرد)."""
+    global _photos
+    if _photos is None:
+        try:
+            with open(_PHOTO_MANIFEST, encoding="utf-8") as f:
+                blob = json.load(f)
+            _photos = {k: v for k, v in blob.items() if v} if isinstance(blob, dict) else {}
+        except Exception:
+            _photos = {}
+    return _photos
+
+
+def titan_photo(tid: str):
+    """مسیر فایل محلی یا URL تصویرِ کارت — اگر هیچ‌کدام نبود None (کارت متنی می‌ماند)."""
+    if not tid:
+        return None
+    for e in _ext:
+        fp = os.path.join(_ASSETS, f"{tid}{e}")
+        if os.path.exists(fp):
+            return fp
+    return _photo_map().get(str(tid))
+
+
+def photo_count() -> int:
+    have = set()
+    if os.path.isdir(_ASSETS):
+        have |= {os.path.splitext(f)[0] for f in os.listdir(_ASSETS) if f.endswith(_ext)}
+    return len(have | set(_photo_map()))
