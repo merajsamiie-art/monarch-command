@@ -1,12 +1,24 @@
 name: 🦖☢️ MONARCH 24/7
 
-# GitHub Actions به‌عنوان VPS رایگان: هر ۱۰ دقیقه یک job جدید در صف می‌رود،
-# هر job تا ~۵ ساعت و ۴۰ دقیقه اجرا می‌شود و دیتابیس را هر ۶۰ ثانیه کامیت می‌کند.
+# رباتِ ۲۴/۷ روی GitHub Actions (VPS رایگان).
+#
+# ▸ شغل «نگهبان»: هر ۲۰ دقیقه یک run بیدار می‌شود؛ اگر نمونه‌ی زنده‌ای باشد،
+#   شغلِ اصلی رد می‌شود (پس صف انباشته نمی‌شود و هیچ run زامبی‌ای نمی‌ماند)؛
+#   اگر چیزی زنده نباشد، فوراً یک ربات تازه بالا می‌آید ← خودترمیم.
+# ▸ push یا dispatch یعنی «همین حالا نسخهٔ تازه را بفرسان»: نگهبان runِ قبلی را
+#   لغو می‌کند تا همیشه فقط یک نمونه از بات اجرا شود (دو نمونه = دو Polling).
+# ▸ دیتابیس هر ۶۰ ثانیه در همان مخزن کامیت می‌شود؛ در پایان/لغو هم یک‌بار ذخیره
+#   می‌شود (trap)، پس با تمام‌شدنِ job هیچ چیزی از جهانِ بازی نمی‌سوزد.
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/20 * * * *"
   workflow_dispatch:
+    inputs:
+      note:
+        description: "یادداشتِ راه‌اندازی (اختیاری)"
+        required: false
+        default: ""
   push:
     paths:
       - "monarch/**"
@@ -20,11 +32,63 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write
+
+env:
+  REPO: ${{ github.repository }}
+  API: https://api.github.com
 
 jobs:
+  guard:
+    name: 🛰 نگهبانِ صف
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    outputs:
+      take_over: ${{ steps.check.outputs.take_over }}
+      live: ${{ steps.check.outputs.live }}
+    steps:
+      - name: شمارشِ نمونه‌های زنده
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MINE: ${{ github.run_id }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          json=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                  "$API/repos/$REPO/actions/runs?status=in_progress&per_page=30" || echo '{}')
+          ids=$(echo "$json" | jq -r --argjson mine "$MINE" \
+                '.workflow_runs[]? | select(.run_id != $mine) | .run_id' 2>/dev/null || true)
+          live=$(echo "$ids" | grep -c '[0-9]' || true)
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+          take=0
+          if [ "$EVENT" = "workflow_dispatch" ] || [ "$EVENT" = "push" ]; then take=1; fi
+          if [ "$live" = "0" ]; then take=1; fi
+          echo "take_over=$take" >> "$GITHUB_OUTPUT"
+          echo "🛰 نمونه‌های زنده (جز این run): $live · تحویلِ فوری: $take"
+      - name: 🔄 لغوِ نمونه‌های قبلی (تا فقط یک بات اجرا شود)
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MINE: ${{ github.run_id }}
+        run: |
+          ids=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                "$API/repos/$REPO/actions/runs?status=in_progress&per_page=30" \
+                | jq -r --argjson mine "$MINE" '.workflow_runs[]? | select(.run_id != $mine) | .run_id' || true)
+          for id in $ids; do
+            echo "  ⏹ لغو run #$id"
+            curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" \
+                 "$API/repos/$REPO/actions/runs/$id/cancel" > /dev/null || true
+          done
+          sleep 5
+
   bot:
+    name: 🦖☢️ مانارچ · جهانِ زنده
+    needs: guard
+    if: needs.guard.outputs.take_over == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 350
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
     steps:
       - name: دریافت کد و دیتابیس
         uses: actions/checkout@v4
@@ -37,17 +101,32 @@ jobs:
       - name: نصب کتابخانه‌ها
         run: pip install -r requirements.txt
 
-      - name: آزمون‌های هسته (بازی، تعادل، ضداسپم)
+      - name: آزمون‌های هسته (بازی، تعادل، ضداسپم، دروازۀ گروه)
         run: |
-          python3 tests/test_game.py || echo "::warning:: تست‌ها سبز نشد — ربات باز هم بالا می‌آید (آپ‌تایم اولویت دارد)"
+          python3 tests/test_game.py || echo "::warning:: تست‌ها سبز نشد — آپ‌تایم اولویت دارد"
+
+      - name: 🧪 بررسیِ لوله (وقتی BOT_TOKEN هنوز ست نشده)
+        if: env.BOT_TOKEN == ''
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          sys.path.insert(0, "monarch")
+          import titans as TN, abilities as AB, bosses
+          print("🧪 مخزن بدونِ BOT_TOKEN است — ربات بالا نمی‌آید، ولی لوله سالم است.")
+          print(f"   تایتان‌ها: {len(TN.TITANS)} · مهارت‌ها: {len(AB.ABILITIES)} · باس‌ها: {len(bosses.BOSSES)}")
+          print("   رازِ BOT_TOKEN را در Settings → Secrets and variables → Actions بگذار،")
+          print("   سپس این workflow را دستی (Run workflow) اجرا کن.")
+          db = pathlib.Path("monarch.db")
+          print("   دیتابیسِ جهان:", f"{db.stat().st_size // 1024} کیلوبایت" if db.exists() else "نو (ساخته می‌شود)")
+          PY
 
       - name: اجرای ربات + ذخیره خودکار دیتابیس
+        if: env.BOT_TOKEN != ''
         env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          ADMIN_IDS: ${{ secrets.ADMIN_IDS }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          CHANNEL_URL: ${{ secrets.CHANNEL_URL }}
-          GROUP_URL: ${{ secrets.GROUP_URL }}
+          ADMIN_IDS: ${{ secrets.ADMIN_IDS || vars.ADMIN_IDS }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID || vars.CHANNEL_ID }}
+          CHANNEL_URL: ${{ vars.CHANNEL_URL }}
+          GROUP_URL: ${{ vars.GROUP_URL }}
           GROUP_ID: ${{ vars.GROUP_ID }}
           MIN_MEMBERS: ${{ vars.MIN_MEMBERS }}
           MC_DB_PATH: ${{ github.workspace }}/monarch.db
@@ -58,23 +137,15 @@ jobs:
           save_db() {
             python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
             git add -f "$DB" 2>/dev/null || true
-            git commit -m "db save exit" >/dev/null 2>&1 || true
+            git commit -m "autosave db" >/dev/null 2>&1 || true
             git pull --rebase --autostash >/dev/null 2>&1 || true
             git push >/dev/null 2>&1 || true
           }
           trap save_db EXIT
-          ( while true; do
-              sleep 60
-              python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
-              git add -f "$DB" 2>/dev/null || true
-              git commit -m "autosave db" >/dev/null 2>&1 || true
-              git pull --rebase --autostash >/dev/null 2>&1 || true
-              git push >/dev/null 2>&1 || true
-            done ) &
+          ( while true; do sleep 60; save_db; done ) &
           SAVER=$!
           timeout 20400 python3 run.py || true
           kill $SAVER 2>/dev/null || true
-          python3 -c "import sqlite3;c=sqlite3.connect('$DB');c.execute('PRAGMA wal_checkpoint(TRUNCATE)');c.close()" 2>/dev/null || true
           git add -f "$DB" 2>/dev/null || true
           git commit -m "db save final" >/dev/null 2>&1 || true
           git pull --rebase --autostash >/dev/null 2>&1 || true
